@@ -203,10 +203,10 @@
   .stepper button{ width:44px; }
 }
 
-    }
-    /* 桌機：玩家名字 + 重置牌局 同一列 */
+   /* 桌機：玩家名字 + 重置牌局 同一列 */
 @media (min-width: 900px){
-  .playerCard .row{
+  /* 直接鎖定包著 namesRow 的那個 .row */
+  .row:has(#namesRow){
     display:grid;
     grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
     gap:16px;
@@ -243,7 +243,6 @@
       </div>
 
       <div class="muted" style="margin-top:10px;">
-        游金：本局若有游金 → 除了游金者本人以外，每個人額外付固定金額（預設 $10）給游金者。
       </div>
     </div>
 
@@ -303,8 +302,6 @@
       </div>
 
       <div class="muted" style="margin-top:10px;">
-        「單游/雙游」水=0 在水表是無效（—），本工具會自動禁止選 0。<br/>
-        若選「本局有游金」，會額外生成「每人 → 游金者」加給款項。
       </div>
     </div>
 
