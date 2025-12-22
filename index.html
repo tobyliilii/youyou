@@ -124,13 +124,6 @@
   <!-- 基本設定 -->
   <div class="card">
     <div class="row">
-      <div>
-        <label>玩家數</label>
-        <select id="playerCount">
-          <option value="4" selected>4</option>
-          <option value="3">3</option>
-        </select>
-      </div>
       <div id="namesRow" class="row"></div>
       <div>
         <label>倍率</label>
@@ -215,13 +208,27 @@
   };
 
   function renderNames(){
-    const n=+$("playerCount").value;
-    players=players.slice(0,n);
-    while(players.length<n) players.push(String.fromCharCode(65+players.length));
-    $("namesRow").innerHTML=players.map((p,i)=>`
-      <div><label>玩家${i+1}</label>
-      <input value="${p}" oninput="players[${i}]=this.value"></div>`).join("");
-    renderSelectors();
+  players = ["A","B","C","D"];
+
+  $("namesRow").innerHTML = players.map((p,i)=>`
+    <div>
+      <label>玩家 ${i+1}</label>
+      <input type="text" value="${p}" data-name="${i}">
+    </div>
+  `).join("");
+
+  document.querySelectorAll("[data-name]").forEach(inp=>{
+    inp.addEventListener("input",(e)=>{
+      const i = Number(e.target.dataset.name);
+      players[i] = e.target.value || `玩家${i+1}`;
+      renderSelectors();
+      renderAll();
+    });
+  });
+
+  renderSelectors();
+}
+
   }
 
   function renderSelectors(){
@@ -247,7 +254,6 @@
 
   $("resetBtn").onclick=()=>{rounds=[];$("roundList").textContent="尚未記錄"};
 
-  $("playerCount").onchange=renderNames;
   renderNames();
 </script>
 </body>
