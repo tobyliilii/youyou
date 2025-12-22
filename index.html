@@ -169,27 +169,59 @@
     }
 
     @media (max-width: 520px){
-      .namesGrid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-      .app{ padding: 14px 12px 18px; }
-      h1{ font-size:20px; }
-      .card{ padding:14px; margin:12px 0; }
+  .app{ padding:14px 12px 18px; }
+  h1{ font-size:20px; }
+  .card{ padding:14px; margin:12px 0; }
 
-      .row{ display:block; }
-      .row > div{ width:100%; margin-bottom:10px; }
+  /* 手機：row 直排 */
+  .row{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
 
-      input[type="number"], input[type="text"], select{ width:100%; }
-      button{ width:100%; }
+  .row > div{
+    width:100%;
+    margin:0;
+  }
 
-      .roundHeader{ flex-direction:column; align-items:stretch; }
-      .roundHeader button{ width:100%; }
+  input[type="number"],
+  input[type="text"],
+  select,
+  button{
+    width:100%;
+  }
 
-      table{ display:block; overflow:auto; -webkit-overflow-scrolling:touch; }
+  table{
+    display:block;
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+  }
 
-      .stepper{ width:100%; }
-      .stepper input{ flex:1; width:auto; }
-      .stepper button{ width:44px; }
+  .stepper{ width:100%; }
+  .stepper input{ flex:1; width:auto; }
+  .stepper button{ width:44px; }
+}
+
     }
+    /* 桌機：玩家名字 + 重置牌局 同一列 */
+@media (min-width: 900px){
+  .playerCard .row{
+    display:grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    gap:16px;
+    align-items:end;
+  }
 
+  #namesRow{
+    display:contents;
+  }
+
+  #resetBtn{
+    height:44px;
+    white-space:nowrap;
+  }
+}
 
     button, select, input{ touch-action: manipulation; }
   </style>
