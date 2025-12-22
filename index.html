@@ -3,21 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>🀄️說吧！今天誰天胡🥇</title>
-
+  <title>說吧!今天誰天胡🀄️</title>
   <style>
+    /* ===== Fixed Dark Mode (no toggle) ===== */
     :root{
-      --bg:#fafafa;
-      --text:#111;
-      --muted:#666;
-      --card:#fff;
-      --border:#ddd;
-      --btn:#f3f3f3;
-      --tableBorder:#eee;
-      --badgeBg:#f5e7a1;
-      --badgeText:#513d00;
-    }
-    [data-theme="dark"]{
       --bg:#0b0f14;
       --text:#e8eef6;
       --muted:#9aa6b2;
@@ -27,56 +16,69 @@
       --tableBorder:#1e2a3a;
       --badgeBg:#2b2a12;
       --badgeText:#f2d26b;
+
+      --radius:16px;
+      --radiusSm:12px;
+      --shadow: 0 10px 28px rgba(0,0,0,.35);
     }
 
-    *{box-sizing:border-box}
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
       margin:0;
+      background:var(--bg);
+      color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",system-ui,sans-serif;
-      background:var(--bg);color:var(--text);
-      padding-bottom:90px;
+      -webkit-text-size-adjust: 100%;
+      padding-bottom: calc(92px + env(safe-area-inset-bottom)); /* space for bottom bar */
     }
-    .app{max-width:720px;margin:auto;padding:16px}
-    h1{margin:6px 0;font-size:22px}
-    .muted{color:var(--muted);font-size:13px;line-height:1.5}
+
+    .app{
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 18px 16px 22px;
+    }
+
+    h1{margin:8px 0 6px; font-size:22px; line-height:1.2;}
+    .muted{color:var(--muted);font-size:13px; line-height:1.55;}
     .card{
       background:var(--card);
       border:1px solid var(--border);
-      border-radius:16px;
-      padding:14px;
+      border-radius:var(--radius);
+      padding:16px;
       margin:14px 0;
+      box-shadow: var(--shadow);
     }
-    .row{display:flex;flex-wrap:wrap;gap:12px}
-    label{font-size:12px;color:var(--muted);margin-bottom:6px;display:block}
 
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+
+    /* Touch-friendly: >=44px; 16px font avoids iOS zoom */
     input,select,button{
-      min-height:44px;
-      font-size:16px;
-      border-radius:12px;
+      padding:12px 12px;
+      border-radius:var(--radiusSm);
       border:1px solid var(--border);
+      font-size:16px;
       background:var(--card);
       color:var(--text);
-      padding:10px 12px;
+      min-height:44px;
     }
-    button{background:var(--btn);font-weight:600}
 
-    /* Stepper */
-    .stepper{display:flex;align-items:center;gap:8px}
-    .stepper button{
-      min-width:44px;
-      font-size:20px;
+    input[type="number"]{width:160px}
+    input[type="text"]{width:160px}
+    button{
+      cursor:pointer;
+      background:var(--btn);
       font-weight:700;
     }
-    .stepper input{
-      width:80px;
-      text-align:center;
-      font-size:18px;
-      font-weight:700;
-    }
+    button:active{ transform: translateY(1px); }
 
     table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{border-bottom:1px solid var(--tableBorder);padding:8px}
-    th{color:var(--muted);font-size:13px}
+    th,td{border-bottom:1px solid var(--tableBorder);padding:10px 8px;text-align:left;vertical-align:top}
+    th{font-size:13px;color:var(--muted);font-weight:700}
+    .warn{color:#ff6b6b;font-size:13px;margin-top:8px}
+    .ok{color:#3ddc84;font-size:13px;margin-top:8px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
 
     .badge{
       display:inline-block;
@@ -85,176 +87,571 @@
       font-size:12px;
       background:var(--badgeBg);
       color:var(--badgeText);
+      border:1px solid var(--border);
       margin-left:6px;
+      line-height:1.6;
+      vertical-align: middle;
     }
 
-    .mono{font-family:ui-monospace,Menlo,monospace;font-size:13px}
+    .roundCard{
+      box-shadow:none;
+      padding:14px;
+      margin-top:10px;
+      border-radius:14px;
+    }
+    .roundHeader{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .roundTitle{
+      font-size:14px;
+      line-height:1.35;
+    }
+    .roundLines{
+      margin-top:10px;
+      font-size:13px;
+      line-height:1.55;
+      word-break: break-word;
+    }
+    .roundHeader button{
+      padding:10px 12px;
+      min-height:40px;
+      border-radius:12px;
+      font-size:14px;
+      white-space:nowrap;
+    }
 
-    /* Mobile layout */
-    @media(max-width:520px){
-      .row{flex-direction:column}
-      input,select,button{width:100%}
+    /* Stepper */
+    .stepper{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .stepper button{
+      min-width:44px;
+      min-height:44px;
+      font-size:20px;
+      font-weight:800;
+      border-radius:12px;
+    }
+    .stepper input{
+      text-align:center;
+      width:84px;
+      font-size:18px;
+      font-weight:800;
+    }
+
+    /* Mobile: single column + full width inputs */
+    @media (max-width: 520px){
+      .app{ padding: 14px 12px 18px; }
+      h1{ font-size:20px; }
+      .card{ padding:14px; margin:12px 0; }
+      .row{ display:block; }
+      .row > div{ width:100%; margin-bottom:10px; }
+      input[type="number"], input[type="text"], select{ width:100%; }
+      button{ width:100%; }
+      .roundHeader{ flex-direction:column; align-items:stretch; }
+      .roundHeader button{ width:100%; }
+      table{ display:block; overflow:auto; -webkit-overflow-scrolling:touch; }
+      .stepper{ width:100%; }
+      .stepper input{ flex:1; width:auto; }
     }
 
     /* Bottom bar */
     .bottomBar{
-      position:fixed;left:0;right:0;bottom:0;
-      padding:10px 12px;
-      backdrop-filter:blur(10px);
-      background:rgba(0,0,0,.15);
-      border-top:1px solid rgba(255,255,255,.1);
-    }
-    [data-theme="dark"] .bottomBar{
-      background:rgba(15,22,32,.7);
+      position:fixed;
+      left:0; right:0; bottom:0;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(15,22,32,.78);
+      border-top: 1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(12px);
+      z-index: 50;
     }
     .bottomGrid{
-      max-width:720px;margin:auto;
+      max-width: 780px;
+      margin: 0 auto;
       display:grid;
-      grid-template-columns:1fr auto auto;
+      grid-template-columns: 1fr auto;
       gap:10px;
+      align-items:center;
     }
-    .primary{font-weight:800}
+    .bottomPrimary{
+      min-height:52px;
+      border-radius: 16px;
+      font-size:16px;
+      font-weight:900;
+    }
+    .bottomIcon{
+      min-width: 54px;
+      min-height:52px;
+      border-radius: 16px;
+      font-size:18px;
+      padding: 0 14px;
+    }
+
+    button, select, input{ touch-action: manipulation; }
   </style>
 </head>
 
 <body>
-<div class="app">
-  <h1>🀄️說吧！今天誰天胡🥇</h1>
-  
-  <!-- 基本設定 -->
-  <div class="card">
-    <div class="row">
-      <div id="namesRow" class="row"></div>
-      <div>
-        <label>倍率</label>
-        <input id="scale" type="number" value="1" step="0.1">
-      </div>
+  <div class="app">
+    <h1>說吧？今天誰天胡</h1>
+    <div class="muted">
+      廈門麻將｜水表查表結算器（固定四人・固定深夜模式）
     </div>
-  </div>
 
-  <!-- 本局 -->
-  <div class="card">
-    <div class="row">
-      <div>
-        <label>莊家</label>
-        <select id="dealerSel"></select>
-      </div>
-      <div>
-        <label>贏家</label>
-        <select id="winnerSel"></select>
-      </div>
-      <div>
-        <label>贏法</label>
-        <select id="typeSel">
-          <option value="dao">到</option>
-          <option value="zimo">自摸</option>
-          <option value="danyou">單游</option>
-          <option value="shuangyou">雙游</option>
-        </select>
-      </div>
-      <div>
-        <label>水</label>
-        <div class="stepper">
-          <button id="waterMinus">−</button>
-          <input id="waterInput" type="number" value="0" min="0" max="12">
-          <button id="waterPlus">＋</button>
+    <!-- 固定四人：名字 + 倍率 -->
+    <div class="card">
+      <div class="row">
+        <div id="namesRow" class="row"></div>
+
+        <div>
+          <label>金額倍率（可不動）</label>
+          <input id="scale" type="number" value="1" step="0.1" />
+        </div>
+
+        <div>
+          <button id="resetBtn">重置牌局</button>
         </div>
       </div>
+
+      <div class="muted" style="margin-top:10px;">
+        規則：不論到/自摸/單游/雙游，都是 <b>三家賠</b>；每個輸家付多少只看「輸家是不是莊家」→ 查表用 庄/平 欄位。<br/>
+        游金：本局若有游金 → 除了游金者本人以外，每個人額外付固定金額（預設 $10）給游金者（不乘倍率）。
+      </div>
+    </div>
+
+    <!-- 本局 -->
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>本局莊家</label>
+          <select id="dealerSel"></select>
+        </div>
+        <div>
+          <label>本局贏家</label>
+          <select id="winnerSel"></select>
+        </div>
+        <div>
+          <label>贏法</label>
+          <select id="typeSel">
+            <option value="dao">到（胡牌）</option>
+            <option value="zimo">自摸</option>
+            <option value="danyou">單游</option>
+            <option value="shuangyou">雙游</option>
+          </select>
+        </div>
+
+        <div>
+          <label>水</label>
+          <div class="stepper">
+            <button type="button" id="waterMinus">−</button>
+            <input id="waterInput" type="number" value="0" min="0" max="12" inputmode="numeric" />
+            <button type="button" id="waterPlus">＋</button>
+          </div>
+        </div>
+
+        <div>
+          <label>游金</label>
+          <select id="youSel">
+            <option value="none" selected>無</option>
+            <option value="yes">本局有游金</option>
+          </select>
+        </div>
+
+        <div id="youWhoWrap" style="display:none;">
+          <label>游金者</label>
+          <select id="youWhoSel"></select>
+        </div>
+
+        <div id="youAmtWrap" style="display:none;">
+          <label>每人加給（元）</label>
+          <input id="youAmt" type="number" value="10" step="1" inputmode="numeric" />
+        </div>
+
+        <div>
+          <button id="addRoundBtn">記錄本局</button>
+        </div>
+      </div>
+
+      <div class="muted" style="margin-top:10px;">
+        「單游/雙游」水=0 在水表是無效（—），本工具會自動禁止選 0。<br/>
+        若選「本局有游金」，會額外生成「每人 → 游金者」加給款項（不乘倍率）。
+      </div>
+    </div>
+
+    <!-- 本局紀錄 -->
+    <div class="card">
+      <strong>本局紀錄</strong>
+      <div id="roundList" style="margin-top:10px;"></div>
+    </div>
+
+    <!-- 總計 -->
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div><strong>總計（水表）</strong></div>
+        <button id="clearRoundsBtn">清空全部局數</button>
+      </div>
+      <div id="totalsArea"></div>
+      <div style="margin-top:12px;"><strong>建議轉帳清單（最少筆數）</strong></div>
+      <div id="transfersArea"></div>
     </div>
   </div>
 
-  <div class="card">
-    <strong>本局紀錄</strong>
-    <div id="roundList" class="muted">尚未記錄</div>
+  <!-- Bottom bar (no theme toggle) -->
+  <div class="bottomBar">
+    <div class="bottomGrid">
+      <button class="bottomPrimary" id="addRoundBtnBottom">＋ 記錄本局</button>
+      <button class="bottomIcon" id="resetBtnBottom" title="重置">↺</button>
+    </div>
   </div>
-
-  <div class="card">
-    <strong>總計</strong>
-    <div id="totalsArea"></div>
-    <div style="margin-top:10px"><strong>轉帳</strong></div>
-    <div id="transfersArea"></div>
-  </div>
-</div>
-
-<!-- Bottom bar -->
-<div class="bottomBar">
-  <div class="bottomGrid">
-    <button class="primary" id="addRoundBtn">＋ 記錄本局</button>
-    <button id="themeBtnBottom">🌙</button>
-    <button id="resetBtn">↺</button>
-  </div>
-</div>
 
 <script>
-  const $ = id => document.getElementById(id);
-  let players=["A","B","C","D"], rounds=[];
+  const $ = (id) => document.getElementById(id);
 
-  const LOOKUP={
-    dao:{0:{庄:16,平:8},1:{庄:17,平:9}},
-    zimo:{0:{庄:32,平:16},1:{庄:34,平:18}},
-    danyou:{1:{庄:68,平:36}},
-    shuangyou:{1:{庄:136,平:72}}
+  // ---- Lookup Table ----
+  const LOOKUP = {
+    dao: {
+      0:{庄:16, 平:8},  1:{庄:17, 平:9},  2:{庄:18, 平:10}, 3:{庄:19, 平:11},
+      4:{庄:20, 平:12}, 5:{庄:21, 平:13}, 6:{庄:22, 平:14}, 7:{庄:23, 平:15},
+      8:{庄:24, 平:16}, 9:{庄:25, 平:17}, 10:{庄:26, 平:18}, 11:{庄:27, 平:19}, 12:{庄:28, 平:20}
+    },
+    zimo: {
+      0:{庄:32, 平:16}, 1:{庄:34, 平:18}, 2:{庄:36, 平:20}, 3:{庄:38, 平:22},
+      4:{庄:40, 平:24}, 5:{庄:42, 平:26}, 6:{庄:44, 平:28}, 7:{庄:46, 平:30},
+      8:{庄:48, 平:32}, 9:{庄:50, 平:34}, 10:{庄:52, 平:36}, 11:{庄:54, 平:38}, 12:{庄:56, 平:40}
+    },
+    danyou: {
+      1:{庄:68, 平:36}, 2:{庄:72, 平:40}, 3:{庄:76, 平:44}, 4:{庄:80, 平:48},
+      5:{庄:84, 平:52}, 6:{庄:88, 平:56}, 7:{庄:92, 平:60}, 8:{庄:96, 平:64},
+      9:{庄:100, 平:68}, 10:{庄:104, 平:72}, 11:{庄:108, 平:76}, 12:{庄:112, 平:80}
+    },
+    shuangyou: {
+      1:{庄:136, 平:72}, 2:{庄:144, 平:80}, 3:{庄:152, 平:88}, 4:{庄:160, 平:96},
+      5:{庄:168, 平:104}, 6:{庄:176, 平:112}, 7:{庄:184, 平:120}, 8:{庄:192, 平:128},
+      9:{庄:200, 平:136}, 10:{庄:208, 平:144}, 11:{庄:216, 平:152}, 12:{庄:224, 平:160}
+    }
   };
 
-  function applyTheme(t){
-    document.documentElement.setAttribute("data-theme",t);
-    localStorage.setItem("theme",t);
-    $("themeBtnBottom").textContent=t==="dark"?"☀️":"🌙";
+  // Fixed 4 players
+  let players = ["A","B","C","D"];
+  let rounds = [];
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   }
-  applyTheme(localStorage.getItem("theme")||"dark");
-
-  $("themeBtnBottom").onclick=()=>{
-    applyTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark");
-  };
+  function fmtMoney(x){
+    const n = Math.round((x + Number.EPSILON) * 100) / 100;
+    return n.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2});
+  }
+  function buildOptions(sel){
+    sel.innerHTML = players.map((p,i)=>`<option value="${i}">${escapeHtml(p)}</option>`).join("");
+  }
 
   function renderNames(){
-  players = ["A","B","C","D"];
+    // Always 4
+    if (!Array.isArray(players) || players.length !== 4) players = ["A","B","C","D"];
 
-  $("namesRow").innerHTML = players.map((p,i)=>`
-    <div>
-      <label>玩家 ${i+1}</label>
-      <input type="text" value="${p}" data-name="${i}">
-    </div>
-  `).join("");
+    $("namesRow").innerHTML = players.map((p,i)=>`
+      <div>
+        <label>玩家 ${i+1}</label>
+        <input type="text" value="${escapeHtml(p)}" data-name="${i}">
+      </div>
+    `).join("");
 
-  document.querySelectorAll("[data-name]").forEach(inp=>{
-    inp.addEventListener("input",(e)=>{
-      const i = Number(e.target.dataset.name);
-      players[i] = e.target.value || `玩家${i+1}`;
-      renderSelectors();
-      renderAll();
+    document.querySelectorAll("[data-name]").forEach(inp=>{
+      inp.addEventListener("input",(e)=>{
+        const i = Number(e.target.dataset.name);
+        players[i] = e.target.value || `玩家${i+1}`;
+        renderSelectors();
+        renderAll();
+      });
     });
-  });
+  }
 
-  renderSelectors();
-}
-
+  function toggleYouUI(){
+    const hasYou = $("youSel").value === "yes";
+    $("youWhoWrap").style.display = hasYou ? "block" : "none";
+    $("youAmtWrap").style.display = hasYou ? "block" : "none";
+    if (hasYou) {
+      if (!$("youWhoSel").value) $("youWhoSel").value = $("winnerSel").value;
+    }
   }
 
   function renderSelectors(){
-    ["dealerSel","winnerSel"].forEach(id=>{
-      $(id).innerHTML=players.map((p,i)=>`<option value="${i}">${p}</option>`).join("");
+    buildOptions($("dealerSel"));
+    buildOptions($("winnerSel"));
+    buildOptions($("youWhoSel"));
+
+    // Default selection
+    $("dealerSel").value = "0";
+    $("winnerSel").value = "0";
+    $("youWhoSel").value = $("winnerSel").value;
+
+    toggleYouUI();
+  }
+
+  function lookupAmount({type, water, payerIsDealer}){
+    const row = LOOKUP[type]?.[water];
+    if (!row) return null;
+    return payerIsDealer ? row["庄"] : row["平"];
+  }
+
+  function typeLabel(t){
+    return ({dao:"到（胡牌）", zimo:"自摸", danyou:"單游", shuangyou:"雙游"}[t] || t);
+  }
+
+  // Water: stepper + rules
+  function syncWaterByType(){
+    const type = $("typeSel").value;
+    const input = $("waterInput");
+    let v = Number(input.value || 0);
+    if (!Number.isFinite(v)) v = 0;
+
+    // Clamp
+    v = Math.max(0, Math.min(12, v));
+
+    // danyou/shuangyou cannot be 0
+    if ((type === "danyou" || type === "shuangyou") && v < 1) v = 1;
+
+    input.value = String(v);
+  }
+
+  function addRound(){
+    const dealer = Number($("dealerSel").value);
+    const winner = Number($("winnerSel").value);
+    const type = $("typeSel").value;
+    const water = Number($("waterInput").value);
+    const scale = Number($("scale").value || 1);
+
+    if ((type === "danyou" || type === "shuangyou") && water === 0){
+      alert("單游/雙游的水=0 在水表是無效（—）。請選 1～12。");
+      return;
+    }
+
+    let lines = [];
+
+    // 3 payers -> winner
+    for (let i=0;i<players.length;i++){
+      if (i === winner) continue;
+
+      const raw = lookupAmount({type, water, payerIsDealer: (i === dealer)});
+      if (raw == null){
+        alert("查表失敗：請確認贏法與水數是否有效。");
+        return;
+      }
+      const amount = raw * scale;
+      lines.push({
+        from:i,
+        to:winner,
+        amount,
+        raw:`查表 ${raw} × 倍率 ${scale}`,
+        role:(i===dealer ? "庄" : "平")
+      });
+    }
+
+    // youjin
+    if ($("youSel").value === "yes") {
+      const youWho = Number($("youWhoSel").value);
+      const youAmt = Number($("youAmt").value || 0);
+
+      if (!Number.isFinite(youAmt) || youAmt < 0) {
+        alert("游金加給金額請填正數（或 0）。");
+        return;
+      }
+
+      for (let i = 0; i < players.length; i++) {
+        if (i === youWho) continue;
+        lines.push({
+          from: i,
+          to: youWho,
+          amount: youAmt,
+          raw: `游金 +${youAmt}`,
+          role: "游金"
+        });
+      }
+    }
+
+    rounds.push({dealer, winner, type, water, scale, lines});
+
+    // UX: keep youWho following winner by default
+    $("youWhoSel").value = $("winnerSel").value;
+
+    renderAll();
+  }
+
+  function removeRound(idx){
+    rounds.splice(idx,1);
+    renderAll();
+  }
+  window.removeRound = removeRound;
+
+  function computeTotals(){
+    const n = players.length;
+    const totals = Array(n).fill(0);
+    rounds.forEach(r=>{
+      r.lines.forEach(L=>{
+        totals[L.from] -= L.amount;
+        totals[L.to]   += L.amount;
+      });
     });
+    return totals;
   }
 
-  function syncWater(){
-    const t=$("typeSel").value;
-    if((t==="danyou"||t==="shuangyou") && +$("waterInput").value<1)
-      $("waterInput").value=1;
+  function settleTransfers(totals){
+    const creditors = [];
+    const debtors = [];
+    totals.forEach((amt,i)=>{
+      const a = Math.round(amt*100)/100;
+      if (a > 0) creditors.push({i, amt:a});
+      else if (a < 0) debtors.push({i, amt:-a});
+    });
+
+    let res = [];
+    let ci=0, di=0;
+    while(ci<creditors.length && di<debtors.length){
+      const c = creditors[ci], d = debtors[di];
+      const pay = Math.min(c.amt, d.amt);
+      if (pay > 0.000001) res.push({from:d.i, to:c.i, amount:pay});
+      c.amt -= pay; d.amt -= pay;
+      if (c.amt <= 0.000001) ci++;
+      if (d.amt <= 0.000001) di++;
+    }
+    return res;
   }
-  $("typeSel").onchange=syncWater;
-  $("waterMinus").onclick=()=>{$("waterInput").value=Math.max(0,+$("waterInput").value-1);syncWater();}
-  $("waterPlus").onclick=()=>{$("waterInput").value=Math.min(12,+$("waterInput").value+1);}
 
-  $("addRoundBtn").onclick=()=>{
-    const w=+$("waterInput").value;
-    rounds.push({w});
-    $("roundList").textContent=`已記錄 ${rounds.length} 局`;
-  };
+  function badgeIf(name, should){
+    return should ? `${name}<span class="badge">🟡游金</span>` : name;
+  }
 
-  $("resetBtn").onclick=()=>{rounds=[];$("roundList").textContent="尚未記錄"};
+  function renderRoundList(){
+    if (!rounds.length){
+      $("roundList").innerHTML = `<div class="muted">尚未記錄局數。</div>`;
+      return;
+    }
 
+    $("roundList").innerHTML = rounds.map((r,idx)=>{
+      const youLine = r.lines.find(L => L.role === "游金");
+      const youWho = youLine ? youLine.to : null;
+
+      const dealerName = badgeIf(escapeHtml(players[r.dealer]), youWho === r.dealer);
+      const winnerName = badgeIf(escapeHtml(players[r.winner]), youWho === r.winner);
+
+      const title = `第 ${idx+1} 局｜莊：${dealerName}｜贏：${winnerName}｜${typeLabel(r.type)}｜${r.water} 水`;
+
+      const lines = r.lines.map(L=>{
+        return `${escapeHtml(players[L.from])}（${escapeHtml(L.role)}） → ${escapeHtml(players[L.to])}：${fmtMoney(L.amount)} <span class="muted">(${escapeHtml(L.raw)})</span>`;
+      }).join("<br>");
+
+      return `
+        <div class="card roundCard">
+          <div class="roundHeader">
+            <div class="roundTitle"><strong>${title}</strong></div>
+            <button onclick="removeRound(${idx})">刪除本局</button>
+          </div>
+          <div class="mono roundLines">${lines}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderTotalsAndTransfers(){
+    const totals = computeTotals();
+    const sum = Math.round(totals.reduce((a,b)=>a+b,0)*100)/100;
+
+    const totalsRows = totals.map((amt,i)=>`
+      <tr>
+        <td>${escapeHtml(players[i])}</td>
+        <td class="mono">${amt>=0?"+":""}${fmtMoney(amt)}</td>
+      </tr>
+    `).join("");
+
+    $("totalsArea").innerHTML = `
+      <div class="${Math.abs(sum) < 0.01 ? "ok" : "warn"}">
+        ${Math.abs(sum) < 0.01 ? "總和 OK（收支平衡）" : `警告：總和不為 0（目前 ${fmtMoney(sum)}）`}
+      </div>
+      <table>
+        <thead><tr><th>玩家</th><th>總輸贏（金額）</th></tr></thead>
+        <tbody>${totalsRows}</tbody>
+      </table>
+    `;
+
+    const transfers = settleTransfers(totals);
+    if (!transfers.length){
+      $("transfersArea").innerHTML = `<div class="muted">目前無需轉帳（或尚未記錄局數）。</div>`;
+      return;
+    }
+
+    $("transfersArea").innerHTML = `
+      <table>
+        <thead><tr><th>誰付</th><th></th><th>付給誰</th><th>金額</th></tr></thead>
+        <tbody>
+          ${transfers.map(t=>`
+            <tr>
+              <td>${escapeHtml(players[t.from])}</td>
+              <td>→</td>
+              <td>${escapeHtml(players[t.to])}</td>
+              <td class="mono">${fmtMoney(t.amount)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function renderAll(){
+    renderRoundList();
+    renderTotalsAndTransfers();
+  }
+
+  function resetAll(){
+    rounds = [];
+    // Keep names as-is, but ensure selectors refresh
+    renderSelectors();
+    renderAll();
+    syncWaterByType();
+    toggleYouUI();
+  }
+
+  // ---- Events ----
+  $("typeSel").addEventListener("change", syncWaterByType);
+
+  $("waterMinus").addEventListener("click", ()=>{
+    let v = Number($("waterInput").value || 0);
+    v = Math.max(0, v - 1);
+    $("waterInput").value = v;
+    syncWaterByType();
+  });
+  $("waterPlus").addEventListener("click", ()=>{
+    let v = Number($("waterInput").value || 0);
+    v = Math.min(12, v + 1);
+    $("waterInput").value = v;
+    syncWaterByType();
+  });
+  $("waterInput").addEventListener("input", syncWaterByType);
+  $("waterInput").addEventListener("blur", syncWaterByType);
+
+  $("resetBtn").addEventListener("click", resetAll);
+  $("addRoundBtn").addEventListener("click", addRound);
+  $("clearRoundsBtn").addEventListener("click", ()=>{ rounds=[]; renderAll(); });
+
+  $("youSel").addEventListener("change", toggleYouUI);
+  $("winnerSel").addEventListener("change", ()=>{
+    $("youWhoSel").value = $("winnerSel").value;
+  });
+
+  // Bottom bar
+  $("addRoundBtnBottom").addEventListener("click", ()=> $("addRoundBtn").click());
+  $("resetBtnBottom").addEventListener("click", ()=> $("resetBtn").click());
+
+  // ---- init ----
   renderNames();
+  renderSelectors();
+  syncWaterByType();
+  toggleYouUI();
+  renderAll();
 </script>
 </body>
 </html>
