@@ -129,23 +129,38 @@
     }
 
     /* Stepper */
-    .stepper{
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .stepper button{
-      min-width:44px;
-      min-height:44px;
-      font-size:20px;
-      font-weight:800;
-      border-radius:12px;
-    }
-    .stepper input{
-      text-align:center;
-      width:84px;
-      font-size:18px;
-      font-weight:800;
+.stepper{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* + / − / 0 統一高度 */
+.stepper button,
+.stepper input{
+  height:44px;
+}
+
+/* + / − 按鈕 */
+.stepper button{
+  width:44px;
+  padding:0;
+  line-height:44px;      /* 垂直置中關鍵 */
+  font-size:20px;
+  font-weight:800;
+  border-radius:12px;
+}
+
+/* 中間的 0（數值） */
+.stepper input{
+  width:56px;            /* 👈 app 感的甜蜜點 */
+  padding:0;
+  text-align:center;
+  font-size:18px;
+  font-weight:800;
+  font-variant-numeric: tabular-nums; /* 數字不跳動 */
+}
+
     }
 
     /* Mobile: single column + full width inputs */
