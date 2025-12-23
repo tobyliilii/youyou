@@ -320,6 +320,7 @@
   </div>
 
 <script>
+
   const $ = (id) => document.getElementById(id);
 
   const LOOKUP = {
@@ -371,7 +372,7 @@
     document.querySelectorAll("[data-name]").forEach(inp=>{
       inp.addEventListener("input",(e)=>{
         const i = Number(e.target.dataset.name);
-        players[i] = e.target.value || \`玩家\${i+1}\`;
+        players[i] = e.target.value || `玩家${i+1}`;
         renderSelectors();
         renderAll();
       });
@@ -447,7 +448,7 @@
         from:i,
         to:winner,
         amount,
-        raw:\`查表 \${raw}\`,
+        raw:`查表 ${raw}`,
         role:(i===dealer ? "庄" : "平")
       });
     }
@@ -467,7 +468,7 @@
           from: i,
           to: youWho,
           amount: youAmt,
-          raw: \`游金 +\${youAmt}\`,
+          raw: `游金 +${youAmt}`,
           role: "游金"
         });
       }
@@ -518,12 +519,12 @@
   }
 
   function badgeIf(name, should){
-    return should ? \`\${name}<span class="badge">🟡游金</span>\` : name;
+    return should ? `${name}<span class="badge">🟡游金</span>` : name;
   }
 
   function renderRoundList(){
     if (!rounds.length){
-      $("roundList").innerHTML = \`<div class="muted">尚未記錄局數。</div>\`;
+      $("roundList").innerHTML = `<div class="muted">尚未記錄局數。</div>`;
       return;
     }
 
@@ -534,21 +535,21 @@
       const dealerName = badgeIf(escapeHtml(players[r.dealer]), youWho === r.dealer);
       const winnerName = badgeIf(escapeHtml(players[r.winner]), youWho === r.winner);
 
-      const title = \`第 \${idx+1} 局｜莊：\${dealerName}｜贏：\${winnerName}｜\${typeLabel(r.type)}｜\${r.water} 水\`;
+      const title = `第 ${idx+1} 局｜莊：${dealerName}｜贏：${winnerName}｜${typeLabel(r.type)}｜${r.water} 水`;
 
       const lines = r.lines.map(L=>{
-        return \`\${escapeHtml(players[L.from])}（\${escapeHtml(L.role)}） → \${escapeHtml(players[L.to])}：\${fmtMoney(L.amount)} <span class="muted">(\${escapeHtml(L.raw)})</span>\`;
+        return `${escapeHtml(players[L.from])}（${escapeHtml(L.role)}） → ${escapeHtml(players[L.to])}：${fmtMoney(L.amount)} <span class="muted">(${escapeHtml(L.raw)})</span>`;
       }).join("<br>");
 
-      return \`
+      return `
         <div class="card roundCard">
           <div class="roundHeader">
-            <div class="roundTitle"><strong>\${title}</strong></div>
-            <button onclick="removeRound(\${idx})">刪除本局</button>
+            <div class="roundTitle"><strong>${title}</strong></div>
+            <button onclick="removeRound(${idx})">刪除本局</button>
           </div>
-          <div class="mono roundLines">\${lines}</div>
+          <div class="mono roundLines">${lines}</div>
         </div>
-      \`;
+      `;
     }).join("");
   }
 
@@ -556,44 +557,44 @@
     const totals = computeTotals();
     const sum = Math.round(totals.reduce((a,b)=>a+b,0)*100)/100;
 
-    const totalsRows = totals.map((amt,i)=>\`
+    const totalsRows = totals.map((amt,i)=>`
       <tr>
-        <td>\${escapeHtml(players[i])}</td>
-        <td class="mono">\${amt>=0?"+":""}\${fmtMoney(amt)}</td>
+        <td>${escapeHtml(players[i])}</td>
+        <td class="mono">${amt>=0?"+":""}${fmtMoney(amt)}</td>
       </tr>
-    \`).join("");
+    `).join("");
 
-    $("totalsArea").innerHTML = \`
-      <div class="\${Math.abs(sum) < 0.01 ? "ok" : "warn"}">
-        \${Math.abs(sum) < 0.01 ? "總和 OK（收支平衡）" : \`警告：總和不為 0（目前 \${fmtMoney(sum)}）\`}
+    $("totalsArea").innerHTML = `
+      <div class="${Math.abs(sum) < 0.01 ? "ok" : "warn"}">
+        ${Math.abs(sum) < 0.01 ? "總和 OK（收支平衡）" : `警告：總和不為 0（目前 ${fmtMoney(sum)}）`}
       </div>
       <table>
         <thead><tr><th>玩家</th><th>總輸贏（金額）</th></tr></thead>
-        <tbody>\${totalsRows}</tbody>
+        <tbody>${totalsRows}</tbody>
       </table>
-    \`;
+    `;
 
     const transfers = settleTransfers(totals);
     if (!transfers.length){
-      $("transfersArea").innerHTML = \`<div class="muted">目前無需轉帳（或尚未記錄局數）。</div>\`;
+      $("transfersArea").innerHTML = `<div class="muted">目前無需轉帳（或尚未記錄局數）。</div>`;
       return;
     }
 
-    $("transfersArea").innerHTML = \`
+    $("transfersArea").innerHTML = `
       <table>
         <thead><tr><th>誰付</th><th></th><th>付給誰</th><th>金額</th></tr></thead>
         <tbody>
-          \${transfers.map(t=>\`
+          ${transfers.map(t=>`
             <tr>
-              <td>\${escapeHtml(players[t.from])}</td>
+              <td>${escapeHtml(players[t.from])}</td>
               <td>→</td>
-              <td>\${escapeHtml(players[t.to])}</td>
-              <td class="mono">\${fmtMoney(t.amount)}</td>
+              <td>${escapeHtml(players[t.to])}</td>
+              <td class="mono">${fmtMoney(t.amount)}</td>
             </tr>
-          \`).join("")}
+          `).join("")}
         </tbody>
       </table>
-    \`;
+    `;
   }
 
   function renderAll(){
@@ -640,6 +641,7 @@
   syncWaterByType();
   toggleYouUI();
   renderAll();
+
 </script>
 </body>
 </html>
