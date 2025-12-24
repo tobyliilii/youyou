@@ -241,11 +241,17 @@
   text-align:center;
 }
 
-/* + / - 按鈕桌機維持方形 */
+/* + / - 按鈕：強制正中 */
 .stepper button{
   width:44px;
   height:44px;
   flex:0 0 auto;
+
+  padding:0;                 /* ⭐ 覆蓋全域 0 14px */
+  display:flex;              /* ⭐ 用 flex 置中最穩 */
+  align-items:center;
+  justify-content:center;
+  line-height:1;             /* 避免 line-height 造成視覺偏移 */
 }
 
     button, select, input{ touch-action: manipulation; }
