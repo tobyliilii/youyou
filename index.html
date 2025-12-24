@@ -179,35 +179,12 @@
   min-width:140px;
 }
 
-/* =====================================
+/* ===============================
    Mobile（手機）
-   ===================================== */
+   =============================== */
 @media (max-width:520px){
-  .stepper input[type="number"]{
-    width:52px !important;
-    flex:0 0 auto;
-  }
-}
-    
-/* =====================================
-   Desktop（桌機）
-   ===================================== */
-@media (min-width:521px){
-  input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"]::-webkit-outer-spin-button{
-    -webkit-appearance:none;
-    margin:0;
-  }
 
-  input[type="number"]{
-    -moz-appearance:textfield;
-  }
-
-  .stepper input[type="number"]{
-    width:56px;
-  }
-}
-
+  /* 1) 玩家區：手機 2x2 + 按鈕滿寬（只影響手機） */
   .namesHeader{
     grid-template-columns: 1fr;
     align-items: stretch;
@@ -221,16 +198,10 @@
   .resetWrap{ min-width:0; }
   #resetBtn{ width:100%; }
 
-  /* =====================================
-   共通（手機 + 桌機）
-   ===================================== */
-.stepper input[type="number"]{
-  height:44px;
-  padding:0;
-  text-align:center;
-  line-height:44px;
-  box-sizing:border-box;
-}
+  /* 2) 水(stepper)的數字框：手機也固定短短的（防止被拉長） */
+  .stepper input[type="number"]{
+    width:52px !important;
+    flex:0 0 auto;
   }
 
   /* 3) 手機版 select：只有白色 ▼（不再上下雙箭頭） */
@@ -270,17 +241,11 @@
   text-align:center;
 }
 
-/* + / - 按鈕：強制正中 */
+/* + / - 按鈕桌機維持方形 */
 .stepper button{
   width:44px;
   height:44px;
   flex:0 0 auto;
-
-  padding:0;                 /* ⭐ 覆蓋全域 0 14px */
-  display:flex;              /* ⭐ 用 flex 置中最穩 */
-  align-items:center;
-  justify-content:center;
-  line-height:1;             /* 避免 line-height 造成視覺偏移 */
 }
 
     button, select, input{ touch-action: manipulation; }
