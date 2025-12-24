@@ -183,47 +183,49 @@
    Mobile（手機）
    =============================== */
 @media (max-width:520px){
-
-  /* 1) 玩家區：手機 2x2 + 按鈕滿寬（只影響手機） */
-  .namesHeader{
-    grid-template-columns: 1fr;
-    align-items: stretch;
-  }
-
-  #namesRow.namesGrid{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap:12px !important;
-  }
-
-  .resetWrap{ min-width:0; }
-  #resetBtn{ width:100%; }
-
-  /* 2) 水(stepper)的數字框：手機也固定短短的（防止被拉長） */
+  /* 你的手機規則都留在這裡 */
   .stepper input[type="number"]{
     width:52px !important;
     flex:0 0 auto;
   }
 
-  /* 水(stepper)：數字真正置中（桌機＋手機） */
+  /* 你的 select 箭頭那段也留在這裡 */
+  select{
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    /* ... */
+  }
+} /* ⭐⭐ 這個右大括號要先結束手機 media ⭐⭐ */
+
+
+/* ===============================
+   Desktop（桌機）— 這段一定要在外面
+   =============================== */
+@media (min-width:521px){
+  /* 建議只針對「水」這顆 input，避免誤傷其他 number input */
+  #waterInput::-webkit-inner-spin-button,
+  #waterInput::-webkit-outer-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  #waterInput{
+    -moz-appearance:textfield; /* Firefox */
+  }
+
+  /* 桌機寬度你要 52/56 都行 */
+  .stepper input[type="number"]{
+    width:52px !important;
+  }
+}
+
+/* 共通：0 置中（放全域，桌機手機都吃得到） */
 .stepper input[type="number"]{
   height:44px;
   padding:0;
   text-align:center;
   line-height:44px;
   box-sizing:border-box;
-}
-
-  /* 桌機：移除 number input 上下鍵 */
-@media (min-width:521px){
-  input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"]::-webkit-outer-spin-button{
-    -webkit-appearance:none;
-    margin:0;
-  }
-
-  input[type="number"]{
-    -moz-appearance:textfield;
-  }
 }
 
   /* 3) 手機版 select：只有白色 ▼（不再上下雙箭頭） */
