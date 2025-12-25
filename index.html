@@ -536,13 +536,15 @@ input{
 
 /* Key selects: prevent text/arrow overlap */
 #dealerSel, #winnerSel, #typeSel{
-  width:100px !important;
-  min-width:100px !important;
-  text-align:center !important;
-  text-align-last:center !important;
-  padding-left:12px !important;
-  padding-right:30px !important;
+  width:120px !important;
+  min-width:120px !important;
+  max-width:120px !important;
+  text-align:left !important;
+  text-align-last:left !important;
+  padding-left:18px !important;
+  padding-right:34px !important;
 }
+
 
 /* Since we removed 紅包欄位, keep second row strictly single-line */
 #youWhoWrap{ min-width:170px !important; }
@@ -610,15 +612,16 @@ input{
   height:44px !important;
   min-height:44px !important;
   max-height:44px !important;
-  width:100px !important;
-  min-width:100px !important;
-  max-width:100px !important;
+  width:120px !important;
+  min-width:120px !important;
+  max-width:120px !important;
   padding:0 !important;
   box-sizing:border-box !important;
   overflow:hidden !important;
   flex:0 0 auto !important;
   align-self:center !important;
 }
+
 .stepper-water button{
   width:30px !important;
   height:44px !important;
@@ -704,28 +707,13 @@ input{
 }
 
 
-/* v5.18: visible build badge for cache/debug */
-.build-badge{
-  position:fixed;
-  top:10px;
-  right:12px;
-  font-size:12px;
-  letter-spacing:.2px;
-  opacity:.45;
-  padding:6px 10px;
-  border-radius:999px;
-  background: rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.10);
-  backdrop-filter: blur(10px);
-  pointer-events:none;
-  z-index:9999;
-}
 
+
+.water-value{ flex:1; text-align:center; }
 </style>
 </head>
 
-<body data-build="v5.19b">
-  <div class="build-badge">build v5.19b (CTA 104px)</div>
+<body>
   <div class="app">
     <h1>說吧!今天誰天胡🀄️</h1>
 
@@ -773,7 +761,7 @@ input{
         </select>
 <div>
           <label>&nbsp;</label>
-          <button id="addRoundBtn" style="width:104px !important; min-width:104px !important; max-width:104px !important; flex:0 0 104px !important; height:44px !important; min-height:44px !important; max-height:44px !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; white-space:nowrap !important;">記錄本局</button>
+          <button id="addRoundBtn" style="width:96px !important; min-width:96px !important; max-width:96px !important; flex:0 0 96px !important; height:44px !important; min-height:44px !important; max-height:44px !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; white-space:nowrap !important;">記錄本局</button>
         </div>
       </div>
     </div>
