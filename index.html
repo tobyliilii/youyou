@@ -747,40 +747,50 @@ input{
 }
 
 
-/* ===== v7.2: water back to 150px + keep icon in-row ===== */
+/* ===== v7.3: keep record icon INSIDE the row + flip pencil tip to LEFT ===== */
 
-/* Names label tight (lock) */
+/* Names label tight (keep your perfect left section) */
 #namesRow.namesGrid > div{ gap:4px !important; }
 #namesRow.namesGrid label{
   margin-bottom:2px !important;
   font-size:11px !important;
+  line-height:1.2 !important;
 }
 
-/* Wider main controls, but not pushing CTA out */
+/* Main controls: fill more, but keep CTA in-row */
 #dealerSel, #winnerSel, #typeSel{
   width:170px !important;
   min-width:170px !important;
   max-width:170px !important;
 }
-
-/* Water back to previous safe width */
 .stepper-water{
   width:150px !important;
   min-width:150px !important;
   max-width:150px !important;
 }
 
-/* Record icon button stays inline, same size as 換人 */
+/* CRITICAL: stop the last column from taking 100% width (older v6.2 rules) */
+.row.formRow > div:last-child{
+  flex:0 0 auto !important;
+  display:flex !important;
+  margin-left:auto !important;  /* push icon to the far right, but stay inside */
+  min-width:auto !important;
+}
+
+/* Icon-only record button sizing */
 #addRoundBtn{
   width:64px !important;
   min-width:64px !important;
   max-width:64px !important;
-  flex:0 0 auto !important;
+  height:44px !important;
   padding:0 !important;
+  flex:0 0 auto !important;
   display:inline-flex !important;
   align-items:center !important;
   justify-content:center !important;
+  white-space:nowrap !important;
 }
+#addRoundBtn svg{ display:block !important; }
 
 </style>
 </head>
@@ -834,10 +844,11 @@ input{
 <div>
           <label>&nbsp;</label>
           <button id="addRoundBtn" aria-label="記錄本局" title="記錄本局">
-<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"
-     style="display:block; transform: scaleX(-1); transform-origin:50% 50%; transform-box: fill-box;">
-  <path fill="currentColor"
-    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="display:block;">
+  <g transform="translate(24 0) scale(-1 1)">
+    <path fill="currentColor"
+      d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
+  </g>
 </svg>
 </button>
         </div>
