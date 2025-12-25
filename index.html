@@ -470,6 +470,37 @@ input{
 .seg-btn{ opacity:.32 !important; }
 .seg-btn.is-active{ opacity:1 !important; }
 
+
+/* ===== v4: single-row flow ===== */
+.formRow{
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+}
+
+/* remove vertical label space in row */
+.formRow label{
+  margin-bottom:2px !important;
+  font-size:11px !important;
+}
+
+/* keep all controls inline */
+.formRow > div{
+  flex:0 0 auto !important;
+}
+
+/* water inline compact */
+.stepper{
+  width:120px !important;
+}
+
+/* CTA as sentence end */
+.formRow > div:last-child{
+  flex:1 1 auto !important;
+}
+#addRoundBtn{
+  width:100% !important;
+}
+
 </style>
 </head>
 
