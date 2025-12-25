@@ -539,17 +539,26 @@
 
   function computeTotals(){
   const totals = Array(players.length).fill(0);
-  const youRecvCount = Array(players.length).fill(0);
-  const youRecvAmt = Array(players.length).fill(0);
+  const youRecvCount = Array(players.length).fill(0); // ✅ 每局游金事件次數
+  const youRecvAmt = Array(players.length).fill(0);   // ✅ 游金總額（照樣加總）
 
   rounds.forEach(r=>{
+    // 這局已經幫哪些人算過「游金事件次數」了（避免同局三筆被算三次）
+    const countedYouThisRound = new Set();
+
     r.lines.forEach(L=>{
       totals[L.from] -= L.amount;
       totals[L.to]   += L.amount;
 
       if (L.role === "游金") {
-        youRecvCount[L.to] += 1;      // 收到游金的次數
-        youRecvAmt[L.to] += L.amount; // 收到游金的總額
+        // 金額：每筆都加（B/C/D 各 +10，總共 +30）
+        youRecvAmt[L.to] += L.amount;
+
+        // 次數：同一局同一個收款人只算 1 次
+        if (!countedYouThisRound.has(L.to)) {
+          youRecvCount[L.to] += 1;
+          countedYouThisRound.add(L.to);
+        }
       }
     });
   });
