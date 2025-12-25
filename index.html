@@ -792,6 +792,60 @@ input{
 }
 #addRoundBtn svg{ display:block !important; }
 
+
+/* ===== v9: Mobile layout polish (<=520px) ===== */
+@media (max-width:520px){
+
+  /* Second card: allow wrapping into a clean grid */
+  .row.formRow{
+    flex-wrap:wrap !important;
+    gap:12px !important;
+    align-items:flex-end !important;
+  }
+
+  /* 2-column grid for controls */
+  .row.formRow > div{
+    flex:1 1 calc(50% - 12px) !important;
+    min-width:0 !important;
+  }
+
+  /* Make selects/stepper fill their cells */
+  #dealerSel, #winnerSel, #typeSel{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+  .stepper-water{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+
+  /* Record button: full-width last row (still icon-only) */
+  .row.formRow > div:last-child{
+    flex:1 1 100% !important;
+    margin-left:0 !important;
+  }
+  #addRoundBtn{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+
+  /* Optional: slightly larger tap target feel */
+  button, select, input{
+    height:46px !important;
+    line-height:46px !important;
+  }
+  .stepper-water button{
+    height:46px !important;
+  }
+  .stepper-water #waterInput{
+    height:46px !important;
+    line-height:46px !important;
+  }
+}
+
 </style>
 </head>
 
