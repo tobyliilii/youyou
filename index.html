@@ -534,6 +534,60 @@ input{
 /* Since we removed 紅包欄位, keep second row strictly single-line */
 #youWhoWrap{ min-width:170px !important; }
 
+
+/* ===== v5.1: align with agreed visual ===== */
+
+/* Desktop: keep the form inputs on a single baseline without wrapping */
+@media (min-width: 980px){
+  .formRow{ flex-wrap:nowrap !important; }
+}
+
+/* Water stepper: ensure total height is 44 (include padding/border) */
+.stepper, .stepper button, #waterInput{
+  box-sizing:border-box !important;
+}
+.stepper{
+  padding:0 !important;
+  height:44px !important;
+  min-height:44px !important;
+  border-radius:14px !important;
+  width:150px !important;
+  flex:0 0 150px !important;
+  gap:0 !important;
+}
+.stepper button{
+  width:44px !important;
+  height:44px !important;
+  border-radius:12px !important;
+}
+#waterInput{
+  height:44px !important;
+  width:62px !important;
+  min-width:62px !important;
+  max-width:62px !important;
+}
+
+/* Read-only pill for 游金 */
+.pill{
+  transition: transform .12s ease, filter .12s ease;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:44px;
+  min-height:44px;
+  padding:0 16px;
+  border-radius:18px;
+  background:var(--surface2);
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:var(--shadow-pressed);
+  color:var(--text);
+  font-weight:700;
+  letter-spacing:.02em;
+  min-width:92px;
+}
+.pill.is-on{ filter:brightness(1.08); }
+
 </style>
 </head>
 
@@ -582,11 +636,8 @@ input{
         <div>
           <label>游金</label>
 
-          <!-- Segmented control (無 / 有) -->
-          <div id="youSeg" class="segmented" role="tablist" aria-label="游金">
-            <button type="button" class="seg-btn" data-value="none" role="tab" aria-selected="true">無</button>
-            <button type="button" class="seg-btn" data-value="yes" role="tab" aria-selected="false">有</button>
-          </div>
+          <!-- v5.1: read-only indicator (auto from 贏法) -->
+          <div id="youPill" class="pill" aria-label="游金狀態">無</div>
 
           <!-- Keep the original select for logic/accessibility (hidden) -->
           <select id="youSel" class="sr-only" aria-hidden="true" tabindex="-1">
@@ -712,6 +763,15 @@ input{
     seg.classList.toggle("is-disabled", !!$("youSel").disabled);
   }
 
+
+  function updateYouPill(){
+    const pill = $("youPill");
+    if (!pill) return;
+    const v = $("youSel")?.value;
+    pill.textContent = (v === "yes") ? "有" : "無";
+    pill.classList.toggle("is-on", v === "yes");
+  }
+
   function setYouValue(v){
     const sel = $("youSel");
     if (!sel) return;
@@ -719,6 +779,7 @@ input{
     sel.value = v;
     // trigger existing change handlers
     sel.dispatchEvent(new Event("change", { bubbles: true }));
+    updateYouPill();
   }
 
   function initYouSegmented(){
@@ -790,6 +851,7 @@ $("youWhoSel").value = $("winnerSel").value;
   }
 
   toggleYouUI();
+  updateYouPill();
 }
 
   function addRound(){
@@ -1039,6 +1101,7 @@ const winnerName = badgeIf(escapeHtml(players[r.winner]), youWho === r.winner);
   renderNames();
   renderSelectors();
   initYouSegmented();
+  updateYouPill();
   syncWaterByType();
   toggleYouUI();
   renderAll();
