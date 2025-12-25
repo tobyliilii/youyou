@@ -703,10 +703,29 @@ input{
   flex:0 0 92px !important;
 }
 
+
+/* v5.18: visible build badge for cache/debug */
+.build-badge{
+  position:fixed;
+  top:10px;
+  right:12px;
+  font-size:12px;
+  letter-spacing:.2px;
+  opacity:.45;
+  padding:6px 10px;
+  border-radius:999px;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  backdrop-filter: blur(10px);
+  pointer-events:none;
+  z-index:9999;
+}
+
 </style>
 </head>
 
-<body data-build="v5.17">
+<body data-build="v5.18">
+  <div class="build-badge">build v5.18 (CTA 96px)</div>
   <div class="app">
     <h1>說吧!今天誰天胡🀄️</h1>
 
