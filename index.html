@@ -747,42 +747,39 @@ input{
 }
 
 
-/* ===== v7.1: restore Names label tight + wider controls + reliable flipped pencil ===== */
+/* ===== v7.2: water back to 150px + keep icon in-row ===== */
 
-/* Names: bring 玩家1/2/3/4 closer to pills (restore) */
-#namesRow.namesGrid > div{
-  gap: 4px !important;           /* was 8px */
-}
+/* Names label tight (lock) */
+#namesRow.namesGrid > div{ gap:4px !important; }
 #namesRow.namesGrid label{
-  margin-bottom: 2px !important; /* was 8px globally */
-  font-size: 11px !important;
-  line-height: 1.2 !important;
+  margin-bottom:2px !important;
+  font-size:11px !important;
 }
 
-/* Make key controls wider to fill the row more */
+/* Wider main controls, but not pushing CTA out */
 #dealerSel, #winnerSel, #typeSel{
   width:170px !important;
   min-width:170px !important;
   max-width:170px !important;
 }
+
+/* Water back to previous safe width */
 .stepper-water{
-  width:190px !important;
-  min-width:190px !important;
-  max-width:190px !important;
+  width:150px !important;
+  min-width:150px !important;
+  max-width:150px !important;
 }
 
-/* Record button: match the "換人" tool vibe (compact icon pill) */
+/* Record icon button stays inline, same size as 換人 */
 #addRoundBtn{
-  width:72px !important;
-  min-width:72px !important;
-  max-width:72px !important;
+  width:64px !important;
+  min-width:64px !important;
+  max-width:64px !important;
+  flex:0 0 auto !important;
   padding:0 !important;
   display:inline-flex !important;
   align-items:center !important;
   justify-content:center !important;
-}
-#addRoundBtn svg{
-  display:block !important;
 }
 
 </style>
@@ -838,7 +835,7 @@ input{
           <label>&nbsp;</label>
           <button id="addRoundBtn" aria-label="記錄本局" title="記錄本局">
 <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"
-     style="display:block; transform: scaleX(-1); transform-origin: 50% 50%; transform-box: fill-box;">
+     style="display:block; transform: scaleX(-1); transform-origin:50% 50%; transform-box: fill-box;">
   <path fill="currentColor"
     d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
 </svg>
