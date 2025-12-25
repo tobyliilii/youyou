@@ -761,14 +761,10 @@ input{
   }
 
   function toggleYouUI(){
-    const hasYou = $("youSel").value === "yes";
-    $("youWhoWrap").style.display = hasYou ? "flex" : "none";
-    if (hasYou) {
-      if (!$("youWhoSel").value) $("youWhoSel").value = $("winnerSel").value;
-    }
+    // v5.5: 游金者固定為贏家，無需選擇
     syncYouSegmented();
     syncYouSegmentedDisabled();
-}
+  }
 
 
   // ===== Segmented control for 游金 (無/有) =====
@@ -825,13 +821,9 @@ input{
   function renderSelectors(){
     buildOptions($("dealerSel"));
     buildOptions($("winnerSel"));
-    buildOptions($("youWhoSel"));
-
-    $("dealerSel").value = "0";
+$("dealerSel").value = "0";
     $("winnerSel").value = "0";
-    $("youWhoSel").value = $("winnerSel").value;
-
-    toggleYouUI();
+toggleYouUI();
   }
 
   function lookupAmount({ type, water, winnerIsDealer }){
@@ -863,9 +855,7 @@ input{
     if ($("youSel").value !== "yes") $("youSel").value = "yes";
 
     youForcedByType = true;
-$("youWhoSel").value = $("winnerSel").value;
-
-    // 避免手滑改回「無」
+// 避免手滑改回「無」
     $("youSel").disabled = true;
   } else {
     // 從單游/雙游切回來：解除強制
@@ -934,8 +924,7 @@ $("youWhoSel").value = $("winnerSel").value;
     }
 
     rounds.push({dealer, winner, type, water, lines});
-    $("youWhoSel").value = $("winnerSel").value;
-    renderAll();
+renderAll();
   }
 
   function removeRound(idx){
@@ -1121,8 +1110,7 @@ const winnerName = badgeIf(escapeHtml(players[r.winner]), youWho === r.winner);
 
   $("youSel").addEventListener("change", toggleYouUI);
   $("winnerSel").addEventListener("change", ()=>{
-    $("youWhoSel").value = $("winnerSel").value;
-  });
+});
 
   renderNames();
   renderSelectors();
