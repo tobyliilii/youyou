@@ -747,26 +747,16 @@ input{
 }
 
 
-/* ===== v6.5: subtle baseline alignment for Names card (no huge empty space) ===== */
-/* Give a SMALL extra height so the bottom alignment is perceptible, but not awkward */
-.namesHeader{
-  min-height: 96px !important;   /* was too tall in v6.4 */
-  align-items: flex-end !important;
-}
-
-/* Push the grid content to the bottom within the header area */
-#namesRow.namesGrid{
-  height: 100% !important;
-  align-content: end !important;
-}
+/* ===== v6.6: Names row - bring 玩家1/2/3/4 labels closer to the input pills ===== */
 #namesRow.namesGrid > div{
-  height: 100% !important;
-  justify-content: flex-end !important;
+  gap: 4px !important; /* was 8px */
 }
 
-/* Keep swap button on the same floor */
-#resetBtn{
-  align-self: flex-end !important;
+/* Reduce label bottom spacing specifically in the names grid */
+#namesRow.namesGrid label{
+  margin-bottom: 2px !important; /* was 8px globally */
+  font-size: 11px !important;
+  line-height: 1.2 !important;
 }
 
 </style>
