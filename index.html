@@ -527,8 +527,8 @@ input{
 
 /* Key selects: prevent text/arrow overlap */
 #dealerSel, #winnerSel, #typeSel{
-  min-width:170px !important;
-  width:170px !important;
+  min-width:120px !important;
+  width:120px !important;
 }
 
 /* Since we removed 紅包欄位, keep second row strictly single-line */
@@ -588,6 +588,21 @@ input{
 }
 .pill.is-on{ filter:brightness(1.08); }
 
+
+/* ===== v5.2: tighten widths + hard-fix water stepper square issue ===== */
+.stepper-water{
+  height:44px !important;
+  max-height:44px !important;
+  min-height:44px !important;
+  padding:0 !important;
+  width:150px !important;
+  flex:0 0 150px !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+}
+.stepper-water button{ height:44px !important; width:44px !important; }
+.stepper-water #waterInput{ height:44px !important; line-height:44px !important; }
+
 </style>
 </head>
 
@@ -626,7 +641,7 @@ input{
 
         <div>
           <label>水</label>
-          <div class="stepper">
+          <div class="stepper stepper-water">
             <button type="button" id="waterMinus">−</button>
             <input id="waterInput" type="number" value="0" min="0" max="12" inputmode="numeric" />
             <button type="button" id="waterPlus">＋</button>
