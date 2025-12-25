@@ -410,6 +410,66 @@ button, select, input {
   opacity:1;
 }
 
+
+/* ===== v3 refinements (Second row alignment & hierarchy) ===== */
+
+/* 1) True visual 44px baseline: use flex centering, fix select padding/line-height */
+select, button, input{
+  height:44px !important;
+}
+select{
+  padding:0 14px !important;
+  line-height:44px !important;
+}
+button{
+  line-height:44px !important;
+  padding:0 18px !important;
+}
+input{
+  line-height:44px !important;
+  padding:0 12px !important;
+}
+
+/* 2) Labels: bring back readable contrast (not too loud) */
+.formRow label{
+  color: rgba(231,238,252,.65) !important;
+  margin-bottom:6px !important;
+}
+
+/* 3) Second row layout: keep tools compact, let CTA take remaining space */
+.formRow > div{ min-width: unset !important; }
+.formRow > div:not(:last-child){ flex:0 0 auto !important; }
+.formRow > div:last-child{
+  flex:1 1 320px !important;
+  min-width: 240px !important;
+}
+#addRoundBtn{ width:100% !important; }
+
+/* 4) Water: compact tool size */
+.stepper{
+  width:132px !important;
+  flex:0 0 132px !important;
+  height:44px !important;
+}
+.stepper button{
+  width:44px !important;
+  height:44px !important;
+  padding:0 !important;
+}
+#waterInput{
+  width:44px !important;
+  padding:0 !important;
+  text-align:center !important;
+}
+
+/* 5) Segmented: align height and make inactive darker */
+.segmented{
+  height:44px !important;
+  align-items:center !important;
+}
+.seg-btn{ opacity:.32 !important; }
+.seg-btn.is-active{ opacity:1 !important; }
+
 </style>
 </head>
 
