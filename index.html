@@ -792,6 +792,10 @@ input{
 }
 #addRoundBtn svg{ display:block !important; }
 
+
+/* ===== v7.9: outline-only pencil (stroke white) ===== */
+#addRoundBtn svg{ opacity:1 !important; }
+
 </style>
 </head>
 
@@ -844,8 +848,15 @@ input{
 <div>
           <label>&nbsp;</label>
           <button id="addRoundBtn" aria-label="記錄本局" title="記錄本局"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="display:block;">
-  <path fill="#ffffff" d="M3 21l6-2 12-12-4-4L5 15l-2 6zm6.6-4.4L7.4 16l9.2-9.2 2.2 2.2-9.2 9.2z"/>
-  <path fill="#ffffff" d="M14.8 4.6l2.6-2.6 4.6 4.6-2.6 2.6z"/>
+  <g fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- pencil body -->
+    <path d="M7.5 16.5L3 21l5-4.5"/>
+    <path d="M7.5 16.5L16.8 7.2c.6-.6 1.6-.6 2.2 0l1.8 1.8c.6.6.6 1.6 0 2.2l-9.3 9.3"/>
+    <!-- tip -->
+    <path d="M3 21l2-6 4 4-6 2z"/>
+    <!-- eraser end -->
+    <path d="M16.8 7.2l2.4-2.4 3 3-2.4 2.4"/>
+  </g>
 </svg></button>
         </div>
       </div>
