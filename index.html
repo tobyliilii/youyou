@@ -1,383 +1,211 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>說吧!今天誰天胡🀄️</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>廈麻記錄</title>
 
-  <style>
-    :root{
-      /* Dark Soft UI tokens */
-      --bg:#0b111a;
-      --surface:#0f1723;     /* card base */
-      --surface2:#0d1520;    /* pressed */
-      --text:#e7eefc;
-      --muted:rgba(231,238,252,.65);
+<style>
+/* ================= 基本變數 ================= */
+:root{
+  --bg:#0b111a;
+  --surface:#0f1723;
+  --surface-2:#0d1520;
+  --text:#e7eefc;
+  --muted:rgba(231,238,252,.55);
+  --accent:#5b8dff;
 
-      --hi:rgba(255,255,255,.06);
-      --lo:rgba(0,0,0,.58);
-      --stroke:rgba(255,255,255,.07);
+  --ctrl-h:44px;
+  --radius:16px;
 
-      --r-xl:26px;
-      --r-lg:18px;
-      --r-md:14px;
-      --r-sm:12px;
+  --hi:rgba(255,255,255,.06);
+  --lo:rgba(0,0,0,.55);
 
-      --shadow-raised:
-        -10px -10px 22px var(--hi),
-         10px  10px 22px var(--lo);
+  --shadow-raised:
+    -8px -8px 18px var(--hi),
+     8px  8px 18px var(--lo);
 
-      --shadow-pressed:
-        inset -6px -6px 12px rgba(255,255,255,.05),
-        inset  6px  6px 12px rgba(0,0,0,.55);
+  --shadow-pressed:
+    inset -4px -4px 8px rgba(255,255,255,.05),
+    inset  4px  4px 8px rgba(0,0,0,.6);
+}
 
-      --shadow-small:
-        -6px -6px 14px rgba(255,255,255,.045),
-         6px  6px 14px rgba(0,0,0,.55);
+*{ box-sizing:border-box; }
 
-      --accent:#4E7BFF;
-      --accent2:#7CB0FF;
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  background:var(--bg);
+  color:var(--text);
+}
 
-      --tableLine:rgba(255,255,255,.06);
-    }
+/* ================= 通用控制元件 ================= */
+.ctrl{
+  height:var(--ctrl-h);
+  border-radius:var(--radius);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--surface);
+  box-shadow:var(--shadow-raised);
+  border:1px solid rgba(255,255,255,.06);
+}
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      background:
-        radial-gradient(1200px 700px at 15% 10%, rgba(78,123,255,.16), transparent 60%),
-        radial-gradient(900px 600px at 85% 25%, rgba(124,176,255,.10), transparent 55%),
-        var(--bg);
-      color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",system-ui,sans-serif;
-      -webkit-text-size-adjust:100%;
-      padding-bottom:calc(18px + env(safe-area-inset-bottom));
-    }
+.ctrl-muted{
+  opacity:.6;
+}
 
-    .app{
-      max-width:860px;
-      margin:0 auto;
-      padding:18px 16px 22px;
-    }
+.select{
+  padding:0 14px;
+}
 
-    h1{ margin:8px 0 6px; font-size:22px; line-height:1.2; letter-spacing:.2px; }
-    .muted{ color:var(--muted); font-size:13px; line-height:1.55; }
+.button{
+  padding:0 20px;
+  cursor:pointer;
+}
 
-    /* ====== Soft UI surfaces ====== */
-    .card{
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0)),
-        var(--surface);
-      border:1px solid var(--stroke);
-      border-radius:var(--r-xl);
-      padding:24px;
-      margin:14px 0;
-      box-shadow:var(--shadow-raised);
-    }
+.button.primary{
+  background:linear-gradient(180deg,#6fa0ff,#4e7bff);
+  color:#fff;
+}
 
-    /* smaller inner cards (per-round) */
-    .roundCard{
-      padding:18px;
-      margin-top:12px;
-      border-radius:20px;
-      box-shadow:var(--shadow-small);
-    }
+.button:active{
+  box-shadow:var(--shadow-pressed);
+}
 
-    /* general form row */
-    .row{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
-    .row > div{
-      display:flex;
-      flex-direction:column;
-      justify-content:flex-end;
-    }
+/* ================= Layout ================= */
+.page{
+  padding:24px;
+  max-width:1200px;
+  margin:auto;
+}
 
-    label{ font-size:12px; color:var(--muted); display:block; margin-bottom:8px; letter-spacing:.2px; }
+.card{
+  background:var(--surface);
+  border-radius:24px;
+  padding:24px;
+  box-shadow:var(--shadow-raised);
+  border:1px solid rgba(255,255,255,.05);
+}
 
-    input,select,button{
-      border-radius:var(--r-md);
-      font-size:16px;
-      color:var(--text);
-      min-height:44px;
-      outline:none;
-    }
+.row{
+  display:flex;
+  gap:16px;
+  flex-wrap:wrap;
+}
 
-    /* pressed fields */
-    input,select{
-      padding:12px 14px;
-      border:1px solid rgba(255,255,255,.06);
-      background:var(--surface2);
-      box-shadow:var(--shadow-pressed);
-    }
-    input[type="number"], input[type="text"]{ width:160px; }
+/* ================= 第一欄 ================= */
+.players .ctrl{
+  width:80px;
+}
 
-    /* buttons (raised) */
-    button{
-      cursor:pointer;
-      background:var(--surface);
-      border:1px solid rgba(255,255,255,.09);
-      box-shadow:var(--shadow-raised);
-      font-weight:800;
-      padding:0 16px;
-      transition:transform .08s ease, box-shadow .12s ease, filter .12s ease;
-    }
-    button:hover{ filter:brightness(1.06); }
-    button:active{
-      transform: translateY(1px);
-      box-shadow:var(--shadow-pressed);
-    }
+.players .swap{
+  width:80px;
+}
 
-    /* secondary/ghost buttons */
-    .resetBtn,
-    #clearRoundsBtn,
-    .roundHeader button{
-      background:transparent;
-      box-shadow:none;
-      border:1px solid rgba(255,255,255,.12);
-    }
-    .resetBtn:hover,
-    #clearRoundsBtn:hover,
-    .roundHeader button:hover{
-      filter:none;
-      background:rgba(255,255,255,.04);
-    }
-    .resetBtn:active,
-    #clearRoundsBtn:active,
-    .roundHeader button:active{
-      transform: translateY(1px);
-      box-shadow:var(--shadow-pressed);
-      background:rgba(255,255,255,.02);
-    }
+/* ================= 第二欄 ================= */
+.controls .water{
+  width:120px; /* 水縮短 */
+  justify-content:space-between;
+  padding:0 10px;
+}
 
-    /* primary CTA (記錄本局) */
-    #addRoundBtn{
-      background: linear-gradient(180deg, rgba(124,176,255,.24), rgba(78,123,255,.18)), var(--surface);
-      border-color: rgba(78,123,255,.35);
-    }
+.controls .record{
+  flex:1; /* 記錄本局拉長 */
+}
 
-    /* Tables: flat, clean */
-    table{ width:100%; border-collapse:collapse; margin-top:12px; }
-    th,td{
-      border-bottom:1px solid var(--tableLine);
-      padding:12px 8px;
-      text-align:left;
-      vertical-align:top;
-    }
-    th{ font-size:13px; color:var(--muted); font-weight:800; }
-    tbody tr:hover{ background:rgba(255,255,255,.03); }
+/* ================= 游金 segmented ================= */
+.segment{
+  display:flex;
+  padding:4px;
+  gap:4px;
+  background:var(--surface-2);
+  box-shadow:var(--shadow-pressed);
+}
 
-    .warn{ color:#ff6b6b; font-size:13px; margin-top:10px; }
-    .ok{ color:#3ddc84; font-size:13px; margin-top:10px; }
-    .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; }
+.segment button{
+  flex:1;
+  height:100%;
+  border:none;
+  border-radius:12px;
+  background:none;
+  color:var(--muted);
+  cursor:pointer;
+}
 
-    .badge{
-      display:inline-block;
-      padding:2px 10px;
-      border-radius:999px;
-      font-size:12px;
-      background:rgba(255,214,102,.10);
-      color:#ffd666;
-      border:1px solid rgba(255,214,102,.18);
-      margin-left:8px;
-      line-height:1.7;
-      vertical-align:middle;
-      box-shadow: -6px -6px 12px rgba(255,255,255,.04), 6px 6px 12px rgba(0,0,0,.45);
-    }
+.segment button.active{
+  background:var(--surface);
+  color:var(--text);
+  box-shadow:var(--shadow-raised);
+}
 
-    .roundHeader{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-    }
-    .roundTitle{ font-size:14px; line-height:1.4; }
-    .roundLines{
-      margin-top:12px;
-      font-size:13px;
-      line-height:1.6;
-      word-break:break-word;
-    }
-    .roundHeader button{
-      height:40px;
-      line-height:40px;
-      padding:0 12px;
-      border-radius:14px;
-      font-size:14px;
-      white-space:nowrap;
-    }
+/* ================= 水 stepper ================= */
+.step{
+  cursor:pointer;
+  opacity:.7;
+}
+.step:hover{ opacity:1; }
 
-    .formRow{ align-items:flex-end; }
-
-    /* ===== Names area ===== */
-    .namesHeader{
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:12px;
-      align-items:end;
-    }
-
-    #namesRow.namesGrid{
-      display:grid;
-      grid-template-columns:repeat(4, minmax(0, 1fr));
-      gap:14px !important;
-      align-items:stretch;
-    }
-
-    #namesRow.namesGrid > div{
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    #namesRow.namesGrid input{
-      width:100%;
-      text-align:center;
-      border-radius:18px;
-      padding:16px 14px;
-      background:var(--surface2);
-      border:1px solid rgba(255,255,255,.06);
-      box-shadow:var(--shadow-pressed);
-    }
-
-    /* ===== Stepper (Water) ===== */
-    .stepper{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:6px;
-      border-radius:18px;
-      background:var(--surface2);
-      border:1px solid rgba(255,255,255,.06);
-      box-shadow:var(--shadow-pressed);
-    }
-
-    /* center 0 */
-    .stepper input[type="number"]{
-      height:44px;
-      padding:0;
-      text-align:center;
-      line-height:44px;
-      width:56px !important;
-      min-width:56px;
-      max-width:56px;
-      flex:0 0 auto;
-      background:transparent;
-      border:0;
-      box-shadow:none;
-    }
-
-    .stepper button{
-      width:44px;
-      height:44px;
-      padding:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex:0 0 auto;
-      border-radius:16px;
-      background:var(--surface);
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:var(--shadow-small);
-    }
-    .stepper button:active{ box-shadow:var(--shadow-pressed); }
-
-
-    /* ===== Segmented (游金 無/有) ===== */
-    .sr-only{
-      position:absolute !important;
-      width:1px; height:1px;
-      padding:0; margin:-1px;
-      overflow:hidden;
-      clip:rect(0,0,0,0);
-      white-space:nowrap;
-      border:0;
-    }
-
-    .segmented{
-      display:flex;
-      gap:6px;
-      padding:6px;
-      border-radius:18px;
-      background:var(--surface2);
-      border:1px solid rgba(255,255,255,.06);
-      box-shadow:var(--shadow-pressed);
-      min-height:44px;
-    }
-
-    .seg-btn{
-      flex:1 1 0;
-      height:44px;
-      border-radius:14px;
-      border:1px solid transparent;
-      background:transparent;
-      color:var(--muted);
-      font-weight:900;
-      letter-spacing:.2px;
-      box-shadow:none;
-      padding:0 14px;
-      transition:filter .12s ease, transform .08s ease, box-shadow .12s ease, color .12s ease, background .12s ease;
-    }
-
-    .seg-btn.is-active{
-      color:var(--text);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0)),
-        var(--surface);
-      border-color: rgba(255,255,255,.08);
-      box-shadow: var(--shadow-small);
-    }
-
-    .segmented.is-disabled{
-      opacity:.6;
-      pointer-events:none;
-    }
-
-    /* ===== Select arrow (white) ===== */
-    select{
-      appearance:none;
-      -webkit-appearance:none;
-      -moz-appearance:none;
-      background-image:url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
-<path fill='white' fill-opacity='0.85' d='M6 9l6 6 6-6'/>\
-</svg>");
-      background-repeat:no-repeat;
-      background-size:16px;
-      background-position:right 12px center;
-      padding-right:44px;
-      text-align:center;
-      text-align-last:center;
-    }
-
-    /* ===== Mobile ===== */
-    @media (max-width:520px){
-      .card{ padding:20px; }
-      .namesHeader{
-        grid-template-columns:1fr;
-        gap:12px;
-        align-items:stretch;
-      }
-      #namesRow.namesGrid{
-        grid-template-columns:repeat(2, minmax(0, 1fr));
-        gap:12px !important;
-      }
-      #resetBtn{ width:100%; justify-self:stretch; }
-    }
-
-    /* Desktop: remove number spinner ONLY for waterInput */
-    @media (min-width:521px){
-      #waterInput::-webkit-inner-spin-button,
-      #waterInput::-webkit-outer-spin-button{
-        -webkit-appearance:none;
-        margin:0;
-      }
-      #waterInput{ -moz-appearance:textfield; }
-    }
-
-    button, select, input{ touch-action: manipulation; }
+/* ================= 小標 ================= */
+.label{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
 </style>
 </head>
+
+<body>
+<div class="page">
+
+  <!-- 第一欄 -->
+  <div class="card players">
+    <div class="label">玩家</div>
+    <div class="row">
+      <div class="ctrl">A</div>
+      <div class="ctrl">B</div>
+      <div class="ctrl">C</div>
+      <div class="ctrl">D</div>
+      <div class="ctrl ctrl-muted swap">換人</div>
+    </div>
+  </div>
+
+  <br/>
+
+  <!-- 第二欄 -->
+  <div class="card controls">
+    <div class="label">本局設定</div>
+    <div class="row">
+
+      <div class="ctrl select">莊家</div>
+      <div class="ctrl select">贏家</div>
+      <div class="ctrl select">贏法</div>
+
+      <!-- 水 -->
+      <div class="ctrl water">
+        <span class="step">−</span>
+        <strong>0</strong>
+        <span class="step">＋</span>
+      </div>
+
+      <!-- 游金 -->
+      <div class="ctrl segment">
+        <button class="active">有</button>
+        <button>無</button>
+      </div>
+
+      <!-- 記錄 -->
+      <div class="ctrl button primary record">
+        記錄本局
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
+
 
 <body>
   <div class="app">
