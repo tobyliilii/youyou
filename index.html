@@ -1388,6 +1388,12 @@ input{
   letter-spacing:0.05px;
 }
 
+
+/* ===== PATCH vB14: Auto adjust title tracking by winner name length ===== */
+.roundTitle .rMain{
+  letter-spacing: var(--titleTrack, 0.15px);
+}
+
 </style>
 </head>
 
@@ -1926,6 +1932,45 @@ return `
     btn.classList.add("success");
     setTimeout(()=>btn.classList.remove("success"),120);
   }
+
+
+// ===== PATCH vB14: Auto adjust title tracking by winner name length =====
+function applyTitleTracking(root=document){
+  root.querySelectorAll('.roundTitle .rMain').forEach(el=>{
+    const winnerEl = el.querySelector('.rWinner');
+    if(!winnerEl) return;
+    const name = (winnerEl.textContent || '').trim();
+    // Count characters (handles CJK reasonably)
+    const len = Array.from(name).length;
+
+    // Subtle, iOS-like tracking tweaks:
+    // short name -> a touch more tracking, longer name -> tighter tracking
+    let track = 0.15;   // px
+    if(len >= 3) track = 0.08;
+    if(len >= 4) track = 0.02;
+    if(len >= 5) track = -0.06;
+    if(len >= 6) track = -0.12;
+
+    // Apply per-element via CSS variable (cleaner than inline letter-spacing)
+    el.style.setProperty('--titleTrack', `${track}px`);
+  });
+}
+
+// Run once on load
+applyTitleTracking();
+
+// Re-apply whenever the rounds list re-renders
+const _origRenderAll = (typeof renderAll === 'function') ? renderAll : null;
+if(_origRenderAll){
+  window.renderAll = function(){
+    _origRenderAll.apply(this, arguments);
+    applyTitleTracking();
+  };
+} else {
+  // Fallback: observe DOM changes
+  const obs = new MutationObserver(()=>applyTitleTracking());
+  obs.observe(document.body, {childList:true, subtree:true});
+}
 
 </script>
 </body>
