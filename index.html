@@ -1312,6 +1312,82 @@ input{
   }
 }
 
+
+/* ===== PATCH vB13: Winner line typography (bold name + lighter meta) + adaptive sizing + smart wrap + youjin tighten ===== */
+
+/* Base: separate emphasis */
+.rMain .rWinner{ font-weight:900; }
+.rMain .rSep,
+.rMain .rDot{ opacity:.55; }
+.rMain .rWater,
+.rMain .rType{ font-weight:750; opacity:.95; }
+
+/* Make layout wrap gracefully when name is long */
+.rMain{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:10px;
+}
+.rMain .rWinner{
+  min-width:0;        /* allow flex shrink */
+  flex:0 1 auto;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap; /* keep name in one line; if too long, ellipsis */
+}
+.rMain .rSep,
+.rMain .rWater,
+.rMain .rDot,
+.rMain .rType,
+.rMain .youBadge{
+  flex:0 0 auto;
+}
+
+/* If it wraps, keep second line a bit tighter */
+.rMain{ row-gap:8px; }
+
+/* Mobile: adaptive sizing + more native spacing */
+@media (max-width:520px){
+  .roundTitle .rMain{
+    font-size:clamp(24px, 6.2vw, 26px) !important; /* down a touch, adaptive */
+    line-height:1.10 !important;
+    letter-spacing:0.15px !important;
+    gap:8px !important;
+    row-gap:6px !important;
+  }
+
+  /* Meta slightly smaller than name */
+  .roundTitle .rMain .rWater,
+  .roundTitle .rMain .rType{
+    font-size:.92em !important;
+    font-weight:700 !important;
+  }
+
+  /* Dots/seps slightly smaller */
+  .roundTitle .rMain .rSep,
+  .roundTitle .rMain .rDot{
+    font-size:.90em !important;
+  }
+
+  /* Smart wrap: if name takes space, meta can go next line without feeling loose */
+  .roundTitle .rMain .rWinner{
+    max-width:100%;
+  }
+
+  /* Sub info smaller + tighter */
+  .roundTitle .rSub{
+    font-size:15px !important;
+    line-height:1.12 !important;
+    margin-top:10px !important;
+  }
+}
+
+/* Youjin: tighten tracking a bit so it feels more “native” */
+.roundCard.isYoujin .rMain{
+  letter-spacing:0.05px;
+}
+
 </style>
 </head>
 
