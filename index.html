@@ -1542,7 +1542,7 @@ input{
 
     <div class="card">
       <div class="row" style="justify-content:space-between;">
-        <div><strong>總計（水表）</strong></div>
+        <div><strong>總計</strong></div>
         <div><button id="clearRoundsBtn">清空全部局數</button></div>
       </div>
       <div id="totalsArea"></div>
@@ -1928,10 +1928,10 @@ return `
 
     $("totalsArea").innerHTML = `
       <div class="${Math.abs(sum) < 0.01 ? "ok" : "warn"}">
-        ${Math.abs(sum) < 0.01 ? "總和 OK（收支平衡）" : `警告：總和不為 0（目前 ${fmtMoney(sum)}）`}
+        ${Math.abs(sum) < 0.01 ? "總和 - 收支平衡" : `警告：總和不為 0（目前 ${fmtMoney(sum)}）`}
       </div>
       <table>
-        <thead><tr><th>玩家</th><th>總輸贏（金額）</th></tr></thead>
+        <thead><tr><th>玩家</th><th>總金額</th></tr></thead>
         <tbody>${totalsRows}</tbody>
       </table>
     `;
