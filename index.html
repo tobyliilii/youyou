@@ -1147,6 +1147,21 @@ input{
 
   let players = ["A","B","C","D"];
   let rounds = [];
+
+  // ===== v11.2: Persist rounds across file/version (stable localStorage key) =====
+  const STORAGE_KEY = "xiama_rounds_v1";
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      const data = JSON.parse(raw);
+      if(Array.isArray(data)) rounds = data;
+    }catch(e){}
+  }
+  function saveState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(rounds));
+    }catch(e){}
   }
 
   let youForcedByType = false;
@@ -1345,6 +1360,8 @@ toggleYouUI();
     }
 
     rounds.push({dealer, winner, type, water, lines});
+    saveState();
+
     // v11.4: New round defaults to NO 游金 (avoid leaking state to next round)
     try{
       if (typeof setYouValue === "function") setYouValue("no");
@@ -1358,6 +1375,7 @@ toggleYouUI();
 
   function removeRound(idx){
     rounds.splice(idx,1);
+    saveState();
     renderAll();
   }
   window.removeRound = removeRound;
@@ -1535,6 +1553,7 @@ return `
   function resetAll(){
     rounds = [];
     renderSelectors();
+    saveState();
     renderAll();
     syncWaterByType();
     toggleYouUI();
@@ -1570,6 +1589,7 @@ return `
   initYouSegmented();
   updateYouPill();
   syncWaterByType();
+  loadState();
   toggleYouUI();
   renderAll();
 
