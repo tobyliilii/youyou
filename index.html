@@ -1243,6 +1243,60 @@ input{
   }
 }
 
+
+/* ===== PATCH vB11: iOS-ish interactions + youjin soft glow + mobile title spacing ===== */
+
+/* --- Trash button: subtle glow on hover/tap --- */
+.roundDelBtn{
+  transition: transform .12s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease, opacity .18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.roundDelBtn:hover{
+  background: rgba(255,255,255,.06) !important;
+  border-color: rgba(255,255,255,.24) !important;
+  box-shadow:
+    0 10px 22px rgba(0,0,0,.45),
+    0 0 0 1px rgba(255,255,255,.06) inset;
+}
+.roundDelBtn:active{
+  transform: scale(.96) !important;
+  background: rgba(255,255,255,.08) !important;
+  border-color: rgba(255,255,255,.28) !important;
+  box-shadow:
+    0 8px 18px rgba(0,0,0,.55),
+    0 0 0 1px rgba(255,255,255,.10) inset;
+}
+
+/* --- Youjin badge: soft outer glow --- */
+.youBadge::before{
+  box-shadow:
+    0 0 0 1px rgba(255,210,64,.25) inset,
+    0 6px 16px rgba(255,210,64,.20),
+    0 0 22px rgba(255,210,64,.16);
+}
+
+/* --- Youjin card: reduce hard border, use glow instead --- */
+.roundCard.isYoujin{
+  border-color: rgba(255,210,64,.55) !important;
+  box-shadow:
+    -10px -10px 22px rgba(255,255,255,.06),
+     10px  10px 22px rgba(0,0,0,.58),
+     0  0  0  1px rgba(255,210,64,.14) inset,
+     0  10px 26px rgba(255,210,64,.10),
+     0  0  34px rgba(255,210,64,.10);
+}
+
+/* --- Mobile: title line spacing more native --- */
+@media (max-width:520px){
+  .roundTitle .rMain{
+    line-height: 1.08 !important;
+    letter-spacing: .2px !important;
+  }
+  .roundTitle .rSub{
+    line-height: 1.15 !important;
+  }
+}
+
 </style>
 </head>
 
