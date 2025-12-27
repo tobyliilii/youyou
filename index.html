@@ -1600,11 +1600,25 @@ input{
 }
 .settleName{
   font-weight:900;
-  font-size:18px;
   letter-spacing:.2px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+@media (max-width:520px){
+  .settleName{
+    /* 手機：名字可能很長，允許換行並自動縮字 */
+    white-space:normal;
+    line-height:1.1;
+    font-size: clamp(13px, 4.2vw, 18px);
+  }
+}
+@media (min-width:521px){
+  .settleName{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:18px;
+  }
 }
 .settleAmt{
   font-weight:950;
@@ -1679,6 +1693,11 @@ input{
   color: rgba(231,238,252,.50);
   font-size:12px;
   line-height:1.35;
+}
+
+
+@media (max-width:520px){
+  .settleTop{ align-items:flex-start; }
 }
 
 </style>
@@ -1981,6 +2000,7 @@ toggleYouUI();
   }
 
   const remain = st0.remain.slice();
+  const youSelected = ($("youSel") && $("youSel").value === "yes");
   let lines = [];
 
   for (let i=0;i<players.length;i++){
@@ -2014,7 +2034,7 @@ toggleYouUI();
     }
   }
 
-  if ($("youSel") && $("youSel").value === "yes") {
+  if (youSelected) {
     const youWho = Number($("winnerSel").value);
     const youAmt = 10;
 
@@ -2037,7 +2057,7 @@ toggleYouUI();
     }
   }
 
-  rounds.push({dealer, winner, type, water, lines});
+  rounds.push({dealer, winner, type, water, lines, youSelected});
 
   const bustedIdx = remain.findIndex(v => v <= 0);
   if (bustedIdx !== -1){
@@ -2045,8 +2065,8 @@ toggleYouUI();
   }
 
   try{
-    if (typeof setYouValue === "function") setYouValue("no");
-    else if ($("youSel")) $("youSel").value = "no";
+    if (typeof setYouValue === "function") setYouValue("none");
+    else if ($("youSel")) $("youSel").value = "none";
     if (typeof toggleYouUI === "function") toggleYouUI();
     if (typeof updateYouPill === "function") updateYouPill();
   }catch(e){}
@@ -2148,7 +2168,7 @@ const winnerName = badgeIf(escapeHtml(players[r.winner]), youWho === r.winner);
       }).join("<br>");
 
       
-      const hasYou = r.lines.some(L => L.role === "游金");
+      const hasYou = !!r.youSelected || r.lines.some(L => L.role === "游金");
 return `
         <div class="card roundCard ${hasYou ? "isYoujin" : ""}">
           <div class="roundHeader">
@@ -2195,13 +2215,13 @@ return `
     byWinner.get(t.to).push(t);
   });
 
+  // 多贏家：依贏最多到最少排序，全部先置頂
   const winners = totals
     .map((amt,i)=>({i, amt: Math.round(amt*100)/100}))
     .filter(x=>x.amt > 0.000001)
     .sort((a,b)=>b.amt-a.amt);
 
   const hasWinners = winners.length > 0;
-  const cards = [];
 
   const makeWinnerCard = (i, amt) => {
     const hasYou = youRecvCount[i] > 0 && Math.abs(youRecvAmt[i]) > 0.000001;
@@ -2250,34 +2270,48 @@ return `
     `;
   };
 
-  if(hasWinners){
-    winners.forEach(w=>{
-      cards.push(makeWinnerCard(w.i, w.amt));
-      const list = (byWinner.get(w.i) || []).slice().sort((a,b)=>b.amount-a.amount);
-      list.forEach(t=>cards.push(makeTransferCard(t)));
-    });
-
-    totals.forEach((amt,i)=>{
-      const a = Math.round(amt*100)/100;
-      if(Math.abs(a) <= 0.000001) cards.push(makeNeutralCard(i, a));
-    });
-  }else{
-    totals.forEach((amt,i)=>cards.push(makeNeutralCard(i, Math.round(amt*100)/100)));
-  }
-
   const warnHtml = (Math.abs(sum) < 0.01) ? "" : `<div class="warn">警告：總和不為 0（目前 ${fmtMoney(sum)}）</div>`;
   const settleHtml = (bustedIdx == null) ? "" : `<div class="ok">本局結算：${escapeHtml(players[bustedIdx])} 已輸光（0）</div>`;
+
+  // 沒有任何輸贏：維持 4 張摘要卡
+  if(!hasWinners){
+    const cards = totals.map((amt,i)=>makeNeutralCard(i, Math.round(amt*100)/100)).join("");
+    $("totalsArea").innerHTML = `
+      ${warnHtml}
+      ${settleHtml}
+      <div class="settleGrid">${cards}</div>
+    `;
+    setRoundLocked(bustedIdx != null, bustedIdx != null ? `本局已結算：${players[bustedIdx]} 已輸光` : "");
+    $("transfersArea").innerHTML = "";
+    return;
+  }
+
+  // 1) 贏家置頂（全部）
+  const winnerCards = winners.map(w=>makeWinnerCard(w.i, w.amt)).join("");
+
+  // 2) 下面才是輸家：依贏家順序展開每個贏家的收款明細（付款方卡）
+  const loserCardsArr = [];
+  winners.forEach(w=>{
+    const list = (byWinner.get(w.i) || []).slice().sort((a,b)=>b.amount-a.amount);
+    list.forEach(t=>loserCardsArr.push(makeTransferCard(t)));
+  });
+
+  // 若有中立玩家（0），放到最底部（不影響贏家置頂）
+  totals.forEach((amt,i)=>{
+    const a = Math.round(amt*100)/100;
+    if (Math.abs(a) <= 0.000001){
+      loserCardsArr.push(makeNeutralCard(i, a));
+    }
+  });
 
   $("totalsArea").innerHTML = `
     ${warnHtml}
     ${settleHtml}
-    <div class="settleGrid">
-      ${cards.join("")}
-    </div>
+    <div class="settleGrid">${winnerCards}</div>
+    ${loserCardsArr.length ? `<div class="settleGrid" style="margin-top:12px">${loserCardsArr.join("")}</div>` : ``}
   `;
 
   setRoundLocked(bustedIdx != null, bustedIdx != null ? `本局已結算：${players[bustedIdx]} 已輸光` : "");
-
   $("transfersArea").innerHTML = "";
 }
   function renderAll(){
@@ -2286,13 +2320,32 @@ return `
   }
 
   function resetAll(){
-    rounds = [];
-    renderSelectors();
+  rounds = [];
+  renderSelectors();
 
-    renderAll();
-    syncWaterByType();
-    toggleYouUI();
-  }
+  // ✅ 換人/重開：回到「胡牌」，解除單游/雙游的游金強制
+  try{
+    $("typeSel").value = "dao";
+    youForcedByType = false;
+    if ($("youSel")) $("youSel").disabled = false;
+  }catch(e){}
+
+  // ✅ 游金回到「無」
+  try{
+    if (typeof setYouValue === "function") setYouValue("none");
+    else if ($("youSel")) $("youSel").value = "none";
+  }catch(e){}
+
+  // 同步 UI
+  try{ syncWaterByType(); }catch(e){}
+  try{ toggleYouUI(); }catch(e){}
+  try{ updateYouPill(); }catch(e){}
+
+  // ✅ 解鎖新增
+  try{ setRoundLocked(false); }catch(e){}
+
+  renderAll();
+}
 
   $("typeSel").addEventListener("change", syncWaterByType);
 
@@ -2313,9 +2366,33 @@ return `
 
   $("resetBtn").addEventListener("click", resetAll);
   $("addRoundBtn").addEventListener("click", addRound);
-  $("clearRoundsBtn").addEventListener("click", ()=>{ rounds=[]; renderAll(); });
+  $("clearRoundsBtn").addEventListener("click", ()=>{
+  rounds = [];
 
-  $("youSel").addEventListener("change", toggleYouUI);
+  // ✅ 清空後：回到「胡牌」，解除單游/雙游的游金強制
+  try{
+    $("typeSel").value = "dao";
+    youForcedByType = false;
+    if ($("youSel")) $("youSel").disabled = false;
+  }catch(e){}
+
+  // ✅ 清空後：游金回到「無」（避免下一局 badge 不顯示）
+  try{
+    if (typeof setYouValue === "function") setYouValue("none");
+    else if ($("youSel")) $("youSel").value = "none";
+  }catch(e){}
+
+  // 同步 UI
+  try{ syncWaterByType(); }catch(e){}
+  try{ toggleYouUI(); }catch(e){}
+  try{ updateYouPill(); }catch(e){}
+
+  // ✅ 新局：解鎖「記錄」
+  try{ setRoundLocked(false); }catch(e){}
+
+  renderAll();
+});
+$("youSel").addEventListener("change", toggleYouUI);
   $("winnerSel").addEventListener("change", ()=>{
 });
 
