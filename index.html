@@ -1543,6 +1543,144 @@ input{
 .playerAmt.pos{ color: rgba(61,220,132,.95); }
 .playerAmt.neg{ color: rgba(255,107,107,.95); }
 
+
+
+/* ===== vNext: 結算卡（贏家總覽 + 轉帳卡） ===== */
+.settleGrid{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:14px;
+  margin-top:14px;
+}
+@media (max-width:520px){
+  .settleGrid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+}
+
+/* Base card */
+.settleCard{
+  background:
+    radial-gradient(120% 160% at 20% 0%, rgba(255,255,255,.06), rgba(255,255,255,0) 55%),
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)),
+    var(--surface);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:22px;
+  padding:16px 18px;
+  box-shadow: var(--shadow-small);
+  min-width:0;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:10px;
+}
+
+/* Winner highlight */
+.settleCard.is-winner{
+  border-color: rgba(255,210,64,.45);
+  background:
+    radial-gradient(120% 160% at 20% 0%, rgba(255,210,64,.18), rgba(255,210,64,0) 60%),
+    linear-gradient(180deg, rgba(255,210,64,.12), rgba(255,255,255,0)),
+    var(--surface);
+  box-shadow:
+    -10px -10px 22px rgba(255,255,255,.06),
+     10px  10px 22px rgba(0,0,0,.58),
+     0  0  0  1px rgba(255,210,64,.14) inset,
+     0  10px 26px rgba(255,210,64,.10),
+     0  0  34px rgba(255,210,64,.10);
+}
+
+.settleTop{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+}
+.settleName{
+  font-weight:900;
+  font-size:18px;
+  letter-spacing:.2px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.settleAmt{
+  font-weight:950;
+  font-size:22px;
+  letter-spacing:.2px;
+  text-align:right;
+}
+.settleAmt.pos{ color: rgba(61,220,132,.95); }
+.settleAmt.neg{ color: rgba(255,107,107,.95); }
+
+.settleMeta{
+  color: rgba(231,238,252,.55);
+  font-size:12px;
+  line-height:1.35;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:16px;
+}
+
+/* Small gold badge (for youjin amount) */
+.youjinMini{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,210,64,.26);
+  background: rgba(255,210,64,.08);
+  color: rgba(231,238,252,.85);
+  font-weight:800;
+}
+.youjinIcon{
+  width:14px;
+  height:14px;
+  display:inline-block;
+  background:#FFD240;
+  clip-path: polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%);
+  box-shadow:
+    0 0 0 1px rgba(255,210,64,.22) inset,
+    0 6px 14px rgba(255,210,64,.14);
+}
+
+/* Transfer card */
+.transferLine{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.transferWho{
+  font-weight:900;
+  font-size:18px;
+  color: rgba(231,238,252,.88);
+  letter-spacing:.2px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.transferArrow{
+  opacity:.55;
+  font-weight:900;
+}
+.transferAmt{
+  font-weight:950;
+  font-size:22px;
+  letter-spacing:.2px;
+  color: rgba(255,107,107,.95);
+  text-align:right;
+}
+.transferSub{
+  color: rgba(231,238,252,.50);
+  font-size:12px;
+  line-height:1.35;
+}
+
 </style>
 </head>
 
@@ -1613,8 +1751,7 @@ input{
         <div><button id="clearRoundsBtn">清空全部局數</button></div>
       </div>
       <div id="totalsArea"></div>
-      <div style="margin-top:12px;"><strong>轉帳清單</strong></div>
-      <div id="transfersArea"></div>
+      <div id="transfersArea" style="display:none"></div>
     </div>
   </div>
 
@@ -1975,71 +2112,98 @@ return `
   }
 
   function renderTotalsAndTransfers(){
-    const { totals, youRecvCount, youRecvAmt } = computeTotals();
-    const sum = Math.round(totals.reduce((a,b)=>a+b,0)*100)/100;
+  const { totals, youRecvCount, youRecvAmt } = computeTotals();
+  const sum = Math.round(totals.reduce((a,b)=>a+b,0)*100)/100;
 
-    const totalsRows = totals.map((amt,i)=>{
-  const hasYou = youRecvCount[i] > 0 && Math.abs(youRecvAmt[i]) > 0.000001;
+  const transfers = settleTransfers(totals);
 
-  const youTag = hasYou
-    ? ` <span class="muted">（含游金 +${fmtMoney(youRecvAmt[i])} / ${youRecvCount[i]}次）</span>`
-    : "";
+  const byWinner = new Map();
+  transfers.forEach(t=>{
+    if(!byWinner.has(t.to)) byWinner.set(t.to, []);
+    byWinner.get(t.to).push(t);
+  });
 
-  return `
-    <tr>
-      <td>${escapeHtml(players[i])}</td>
-      <td class="mono">${amt>=0?"+":""}${fmtMoney(amt)}${youTag}</td>
-    </tr>
-  `;
-}).join("");
+  const winners = totals
+    .map((amt,i)=>({i, amt: Math.round(amt*100)/100}))
+    .filter(x=>x.amt > 0.000001)
+    .sort((a,b)=>b.amt-a.amt);
 
-    $("totalsArea").innerHTML = `
-  <div class="${Math.abs(sum) < 0.01 ? "ok" : "warn"}">
-    ${Math.abs(sum) < 0.01 ? "總和 - 收支平衡" : `警告：總和不為 0（目前 ${fmtMoney(sum)}）`}
-  </div>
+  const hasWinners = winners.length > 0;
+  const cards = [];
 
-  <div class="totalsGrid">
-    ${players.map((_,i)=>{
-      const amt = totals[i];
-      const hasYou = youRecvCount[i] > 0 && Math.abs(youRecvAmt[i]) > 0.000001;
-      const meta = hasYou ? `含游金 +${fmtMoney(youRecvAmt[i])} / ${youRecvCount[i]}次` : "";
-      const cls = (amt >= 0) ? "pos" : "neg";
-      const sign = (amt >= 0) ? "+" : "";
-      return `
-        <div class="playerTotalCard">
-          <div class="playerTotalTop">
-            <div class="playerName">${escapeHtml(players[i])}</div>
-            <div class="playerAmt ${cls} mono">${sign}${fmtMoney(amt)}</div>
-          </div>
-          ${meta ? `<div class="playerMeta">${meta}</div>` : `<div class="playerMeta">&nbsp;</div>`}
+  const makeWinnerCard = (i, amt) => {
+    const hasYou = youRecvCount[i] > 0 && Math.abs(youRecvAmt[i]) > 0.000001;
+    const youStr = hasYou
+      ? `<span class="youjinMini"><span class="youjinIcon" aria-hidden="true"></span>+${fmtMoney(youRecvAmt[i])} / ${youRecvCount[i]}次</span>`
+      : `<span>&nbsp;</span>`;
+
+    return `
+      <div class="settleCard is-winner">
+        <div class="settleTop">
+          <div class="settleName">${escapeHtml(players[i])}</div>
+          <div class="settleAmt pos mono">+${fmtMoney(amt)}</div>
         </div>
-      `;
-    }).join("")}
-  </div>
-`;
-    const transfers = settleTransfers(totals);
-    if (!transfers.length){
-      $("transfersArea").innerHTML = `<div class="muted">無。</div>`;
-      return;
-    }
-
-    $("transfersArea").innerHTML = `
-      <table>
-        <thead><tr><th>誰付</th><th></th><th>付給誰</th><th>金額</th></tr></thead>
-        <tbody>
-          ${transfers.map(t=>`
-            <tr>
-              <td>${escapeHtml(players[t.from])}</td>
-              <td>→</td>
-              <td>${escapeHtml(players[t.to])}</td>
-              <td class="mono">${fmtMoney(t.amount)}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
+        <div class="settleMeta">${youStr}</div>
+      </div>
     `;
+  };
+
+  const makeNeutralCard = (i, amt) => {
+    const cls = (amt >= 0) ? "pos" : "neg";
+    const sign = (amt >= 0) ? "+" : "";
+    return `
+      <div class="settleCard">
+        <div class="settleTop">
+          <div class="settleName">${escapeHtml(players[i])}</div>
+          <div class="settleAmt ${cls} mono">${sign}${fmtMoney(amt)}</div>
+        </div>
+        <div class="settleMeta">&nbsp;</div>
+      </div>
+    `;
+  };
+
+  const makeTransferCard = (t) => {
+    return `
+      <div class="settleCard">
+        <div class="transferLine">
+          <div class="transferWho">${escapeHtml(players[t.from])}</div>
+          <div class="transferArrow">→</div>
+          <div class="transferWho" style="text-align:right">${escapeHtml(players[t.to])}</div>
+        </div>
+        <div class="transferLine">
+          <div class="transferSub">轉給贏家</div>
+          <div class="transferAmt mono">-${fmtMoney(t.amount)}</div>
+        </div>
+      </div>
+    `;
+  };
+
+  if(hasWinners){
+    winners.forEach(w=>{
+      cards.push(makeWinnerCard(w.i, w.amt));
+      const list = (byWinner.get(w.i) || []).slice().sort((a,b)=>b.amount-a.amount);
+      list.forEach(t=>cards.push(makeTransferCard(t)));
+    });
+
+    totals.forEach((amt,i)=>{
+      const a = Math.round(amt*100)/100;
+      if(Math.abs(a) <= 0.000001) cards.push(makeNeutralCard(i, a));
+    });
+  }else{
+    totals.forEach((amt,i)=>cards.push(makeNeutralCard(i, Math.round(amt*100)/100)));
   }
 
+  const warnHtml = (Math.abs(sum) < 0.01) ? "" : `<div class="warn">警告：總和不為 0（目前 ${fmtMoney(sum)}）</div>`;
+
+  $("totalsArea").innerHTML = `
+    ${warnHtml}
+    <div class="settleGrid">
+      ${cards.join("")}
+    </div>
+  `;
+
+  $("transfersArea").innerHTML = "";
+}
   function renderAll(){
     renderRoundList();
     renderTotalsAndTransfers();
