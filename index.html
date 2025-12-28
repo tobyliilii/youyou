@@ -1789,10 +1789,13 @@ input{
         <div>
           <label>贏法</label>
           <select id="typeSel">
-            <option value="dao">胡牌</option>
-            <option value="zimo">自摸</option>
-            <option value="danyou">單游</option>
-            <option value="shuangyou">雙游</option>
+            
+                        <option value="dao">胡牌</option>
+                        <option value="zimo">自摸</option>
+                        <option value="danyou">單游</option>
+                        <option value="shuangyou">雙游</option>
+                        <option value="tianhu">天胡</option>
+
           </select>
         </div>
 
@@ -1839,7 +1842,7 @@ input{
 
   const LOOKUP = {
     dao: {
-      0:{庄:16, 平:8},  1:{庄:17, 平:9},  2:{庄:18, 平:10}, 3:{庄:19, 平:11},
+      0:{庄:16, 平:8}, 1:{庄:17, 平:9}, 2:{庄:18, 平:10}, 3:{庄:19, 平:11},
       4:{庄:20, 平:12}, 5:{庄:21, 平:13}, 6:{庄:22, 平:14}, 7:{庄:23, 平:15},
       8:{庄:24, 平:16}, 9:{庄:25, 平:17}, 10:{庄:26, 平:18}, 11:{庄:27, 平:19}, 12:{庄:28, 平:20}
     },
@@ -1857,6 +1860,10 @@ input{
       1:{庄:136, 平:72}, 2:{庄:144, 平:80}, 3:{庄:152, 平:88}, 4:{庄:160, 平:96},
       5:{庄:168, 平:104}, 6:{庄:176, 平:112}, 7:{庄:184, 平:120}, 8:{庄:192, 平:128},
       9:{庄:200, 平:136}, 10:{庄:208, 平:144}, 11:{庄:216, 平:152}, 12:{庄:224, 平:160}
+    },
+    // 天胡：水數固定 0（UI 會鎖住水）
+    tianhu: {
+      0:{庄:64, 平:32}
     }
   };
 
@@ -2181,17 +2188,25 @@ function setRoundLocked(isLocked, reasonText=""){
 }
 
   function typeLabel(t){
-    return ({dao:"胡牌", zimo:"自摸", danyou:"單游", shuangyou:"雙游"}[t] || t);
+        return ({dao:"胡牌", tianhu:"天胡", zimo:"自摸", danyou:"單游", shuangyou:"雙游"}[t] || t);
   }
 
   function syncWaterByType(){
   const type = $("typeSel").value;
   const input = $("waterInput");
+  const minusBtn = $("waterMinus");
+  const plusBtn = $("waterPlus");
+  const lockWater = (type === "tianhu");
+  input.disabled = lockWater;
+  if (minusBtn) minusBtn.disabled = lockWater;
+  if (plusBtn) plusBtn.disabled = lockWater;
+
 
   let v = Number(input.value || 0);
   if (!Number.isFinite(v)) v = 0;
 
   v = Math.max(0, Math.min(12, v));
+  if (type === "tianhu") v = 0;
   if ((type === "danyou" || type === "shuangyou") && v < 1) v = 1;
   input.value = String(v);
 
@@ -2221,7 +2236,7 @@ function setRoundLocked(isLocked, reasonText=""){
   function addRound(){
   const st0 = simulateGameState();
   if (st0.bustedIdx != null){
-    alert(`本局已結算：${players[st0.bustedIdx]} 已輸光（0）。請清空全部局數/開始新局。`);
+    alert(`本局已結算：${players[st0.bustedIdx]}輸掉褲子。請清空全部局數/開始新局。`);
     setRoundLocked(true, "本局已結算");
     return;
   }
@@ -2281,7 +2296,7 @@ function removeRound(idx){
   // ✅ 刪除後可能解除「輸光結算」，重新判斷鎖定
   try{
     const st = simulateGameState();
-    setRoundLocked(st.bustedIdx != null, st.bustedIdx != null ? `本局已結算：${players[st.bustedIdx]} 已輸光` : "");
+    setRoundLocked(st.bustedIdx != null, st.bustedIdx != null ? `本局已結算：${players[st.bustedIdx]}輸掉褲子` : "");
   }catch(e){}
 
   renderAll();
@@ -2468,7 +2483,7 @@ function renderTotalsAndTransfers(){
   };
 
   const warnHtml = (Math.abs(sum) < 0.01) ? "" : `<div class="warn">警告：總和不為 0（目前 ${fmtMoney(sum)}）</div>`;
-  const settleHtml = (bustedIdx == null) ? "" : `<div class="ok">本局結算：${escapeHtml(players[bustedIdx])} 已輸光（0）</div>`;
+  const settleHtml = (bustedIdx == null) ? "" : `<div class="ok">${escapeHtml(players[bustedIdx])}輸掉褲子</div>`;
 
   // 沒有任何輸贏：維持 4 張摘要卡
   if(!hasWinners){
@@ -2478,7 +2493,7 @@ function renderTotalsAndTransfers(){
       ${settleHtml}
       <div class="settleGrid">${cards}</div>
     `;
-    setRoundLocked(bustedIdx != null, bustedIdx != null ? `本局已結算：${players[bustedIdx]} 已輸光` : "");
+    setRoundLocked(bustedIdx != null, bustedIdx != null ? `本局已結算：${players[bustedIdx]}輸掉褲子` : "");
     $("transfersArea").innerHTML = "";
     return;
   }
@@ -2508,7 +2523,7 @@ function renderTotalsAndTransfers(){
     ${loserCardsArr.length ? `<div class="settleGrid" style="margin-top:12px">${loserCardsArr.join("")}</div>` : ``}
   `;
 
-  setRoundLocked(bustedIdx != null, bustedIdx != null ? `本局已結算：${players[bustedIdx]} 已輸光` : "");
+  setRoundLocked(bustedIdx != null, bustedIdx != null ? `本局已結算：${players[bustedIdx]}輸掉褲子` : "");
   $("transfersArea").innerHTML = "";
 }
   function renderAll(){
