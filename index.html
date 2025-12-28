@@ -1735,6 +1735,13 @@ input{
   .settleTop{ align-items:flex-start; }
 }
 
+
+/* ===== PATCH vC1: Reserve space so long winner names don't overlap trash button ===== */
+.roundTitle{ padding-right:120px !important; }
+@media (max-width:520px){
+  .roundTitle{ padding-right:108px !important; }
+}
+
 </style>
 </head>
 
@@ -2068,9 +2075,17 @@ function setRoundLocked(isLocked, reasonText=""){
   function fitAllTotalsNames(){
     var root = document.getElementById("totalsArea");
     if(!root) return;
-    var els = root.querySelectorAll(".playerTotalTop .playerName");
-    for(var i=0;i<els.length;i++){
-      fitTextToWidth(els[i], 16, 10);
+
+    // 1) 總計大卡：玩家名（左側），盡量縮到單行可放下
+    var topNames = root.querySelectorAll(".playerTotalTop .playerName");
+    for(var i=0;i<topNames.length;i++){
+      fitTextToWidth(topNames[i], 18, 8);
+    }
+
+    // 2) 付款明細卡：左右兩側玩家名也自動縮字，避免被 ... 截掉
+    var transferNames = root.querySelectorAll(".settleCard .transferWho");
+    for(var j=0;j<transferNames.length;j++){
+      fitTextToWidth(transferNames[j], 16, 8);
     }
   }
 
@@ -2084,7 +2099,7 @@ function setRoundLocked(isLocked, reasonText=""){
   }
 
   window.addEventListener("resize", debounce(function(){
-    fitAllTotalsNames();
+    requestAnimationFrame(fitAllTotalsNames);
   }, 120));
 
   function buildOptions(sel){
