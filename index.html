@@ -920,7 +920,7 @@ input{
 }
 .roundTitle .rTop .rIdx{ flex:0 0 auto; }
 .roundTitle .rTop .rDealer{
-  flex:1 1 auto;
+  flex:0 1 auto;   /* don't grow; keep streak badge close */
   min-width:0;
   white-space:nowrap;
   overflow:hidden;
@@ -967,7 +967,7 @@ input{
   gap:10px;
 }
 
-.rMeta .youBadge{ margin-left:auto; }
+.rMeta .youBadge{ margin-left:2px; } /* keep badge next to type */
 .roundTitle .rStar{ opacity:.55; font-weight:800; }
 
 .youBadge{
@@ -1917,6 +1917,37 @@ input{
 
   let players = ["A","B","C","D"];
 
+// ===== Random "busted" taunts (when someone drops to 0 or below) =====
+// 只輸出「{name}輸掉XXXX」這種短句（不含「這局」）
+const BUST_TAUNT_SUFFIXES = [
+  "輸掉褲子",
+  "輸掉一個巴黎世家",
+  "輸掉一個香奈兒",
+  "輸掉一台MacBook",
+  "輸掉一台Dyson",
+  "輸掉一盒胃藥",
+  "輸掉一碗泡麵",
+];
+
+let bustedTauntCacheIdx = null;
+let bustedTauntCacheText = "";
+
+function pickRandomTauntSuffix(){
+  const n = BUST_TAUNT_SUFFIXES.length;
+  if (!n) return "輸掉褲子";
+  return BUST_TAUNT_SUFFIXES[Math.floor(Math.random() * n)];
+}
+
+// Returns e.g. "A輸掉一個LV"
+function getBustedTaunt(idx){
+  if (idx == null || idx < 0 || idx >= players.length) return "";
+  if (bustedTauntCacheIdx === idx && bustedTauntCacheText) return bustedTauntCacheText;
+  bustedTauntCacheIdx = idx;
+  bustedTauntCacheText = String(players[idx]) + pickRandomTauntSuffix();
+  return bustedTauntCacheText;
+}
+
+
 const START_STACK = 100; // 每局每人起始 100
 
 function computeAllRoundsDetailed(){
@@ -2347,7 +2378,7 @@ function setRoundLocked(isLocked, reasonText=""){
   function addRound(){
   const st0 = simulateGameState();
   if (st0.bustedIdx != null){
-    alert(`本局已結算：${players[st0.bustedIdx]}輸掉褲子。請清空全部局數/開始新局。`);
+    alert(`本局已結算：${getBustedTaunt(st0.bustedIdx)}。請清空全部局數/開始新局。`);
     setRoundLocked(true, "本局已結算");
     return;
   }
@@ -2407,7 +2438,7 @@ function removeRound(idx){
   // ✅ 刪除後可能解除「輸光結算」，重新判斷鎖定
   try{
     const st = simulateGameState();
-    setRoundLocked(st.bustedIdx != null, st.bustedIdx != null ? `本局已結算：${players[st.bustedIdx]}輸掉褲子` : "");
+    setRoundLocked(st.bustedIdx != null, st.bustedIdx != null ? `本局已結算：${getBustedTaunt(st.bustedIdx)}` : "");
   }catch(e){}
 
   renderAll();
@@ -2594,7 +2625,7 @@ function renderTotalsAndTransfers(){
   };
 
   const warnHtml = (Math.abs(sum) < 0.01) ? "" : `<div class="warn">警告：總和不為 0（目前 ${fmtMoney(sum)}）</div>`;
-  const settleHtml = (bustedIdx == null) ? "" : `<div class="ok">${escapeHtml(players[bustedIdx])}輸掉褲子</div>`;
+  const settleHtml = (bustedIdx == null) ? "" : `<div class="ok">${escapeHtml(getBustedTaunt(bustedIdx))}</div>`;
 
   // 沒有任何輸贏：維持 4 張摘要卡
   if(!hasWinners){
@@ -2606,7 +2637,7 @@ function renderTotalsAndTransfers(){
     `;
     fitAllTotalsNames();
 
-    setRoundLocked(bustedIdx != null, bustedIdx != null ? `本局已結算：${players[bustedIdx]}輸掉褲子` : "");
+    setRoundLocked(bustedIdx != null, bustedIdx != null ? `本局已結算：${getBustedTaunt(bustedIdx)}` : "");
     $("transfersArea").innerHTML = "";
     return;
   }
@@ -2638,7 +2669,7 @@ function renderTotalsAndTransfers(){
     fitAllTotalsNames();
 
 
-  setRoundLocked(bustedIdx != null, bustedIdx != null ? `本局已結算：${players[bustedIdx]}輸掉褲子` : "");
+  setRoundLocked(bustedIdx != null, bustedIdx != null ? `本局已結算：${getBustedTaunt(bustedIdx)}` : "");
   $("transfersArea").innerHTML = "";
 }
   function renderAll(){
