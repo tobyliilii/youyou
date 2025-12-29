@@ -914,7 +914,18 @@ input{
   font-weight:700;
   color: rgba(255,255,255,.55);
   letter-spacing:.2px;
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
+.roundTitle .rTop .rIdx{ flex:0 0 auto; }
+.roundTitle .rTop .rDealer{
+  flex:1 1 auto;
+  min-width:0;
+  white-space:normal;
+  word-break:break-word;
+}
+.roundTitle .rTop .streakMini{ flex:0 0 auto; }
 .roundTitle .rIdx{ margin-right:6px; color: rgba(255,255,255,.45); }
 .roundTitle .rMain{
   margin-top:10px;
@@ -2486,7 +2497,7 @@ const streakText = (carry > 0) ? `連${carry}（${mul}倍）` : "";
               </div>
               <div class="rMeta">
                 <span class="rWater">${r.water}水</span>
-                <span class="rStar">＊</span>
+                <span class="rStar">・</span>
                 <span class="rType">${escapeHtml(typeLabel(r.type))}</span>
               </div>
               <div class="rSub">${sub}</div>
