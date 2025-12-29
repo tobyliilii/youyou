@@ -922,8 +922,9 @@ input{
 .roundTitle .rTop .rDealer{
   flex:1 1 auto;
   min-width:0;
-  white-space:normal;
-  word-break:break-word;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .roundTitle .rTop .streakMini{ flex:0 0 auto; }
 .roundTitle .rIdx{ margin-right:6px; color: rgba(255,255,255,.45); }
@@ -965,6 +966,8 @@ input{
   align-items:center;
   gap:10px;
 }
+
+.rMeta .youBadge{ margin-left:auto; }
 .roundTitle .rStar{ opacity:.55; font-weight:800; }
 
 .youBadge{
@@ -1738,6 +1741,8 @@ input{
   justify-content:space-between;
   gap:12px;
 }
+
+.transferLine.transferTo{ justify-content:flex-start; }
 .transferWho{
   font-weight:900;
   font-size:18px;
@@ -2488,17 +2493,18 @@ const streakText = (carry > 0) ? `連${carry}（${mul}倍）` : "";
             <div class="roundTitle">
               <div class="rTop">
                 <span class="rIdx">${idx+1}.</span>
-                <span class="rDealer">莊家:${escapeHtml(players[r.dealer])}</span>
+                <span class="rDealer" title="${escapeHtml(players[r.dealer])}">莊家:${escapeHtml(players[r.dealer])}</span>
                 ${streakText ? `<span class="streakMini">${streakText}</span>` : ""}
               </div>
               <div class="rWinnerOnly">
-                <span class="rWinner">${badgeIf(escapeHtml(players[r.winner]), youWho === r.winner)}</span>
-                ${hasYou ? '<span class="youBadge"><span class="youDot"></span>游金</span>' : ''}
+                <span class="rWinner">${escapeHtml(players[r.winner])}</span>
+                
               </div>
               <div class="rMeta">
                 <span class="rWater">${r.water}水</span>
                 <span class="rStar">・</span>
                 <span class="rType">${escapeHtml(typeLabel(r.type))}</span>
+                ${(r.type==="danyou"||r.type==="shuangyou") ? '<span class="youBadge"><span class="youDot"></span>游金</span>' : ''}
               </div>
               <div class="rSub">${sub}</div>
             </div>
@@ -2574,16 +2580,14 @@ function renderTotalsAndTransfers(){
   };
 
   const makeTransferCard = (t) => {
-    return `
-      <div class="settleCard">
+    return `      <div class="settleCard">
         <div class="transferLine">
           <div class="transferWho">${escapeHtml(players[t.from])}</div>
-          <div class="transferArrow">→</div>
-          <div class="transferWho" style="text-align:right">${escapeHtml(players[t.to])}</div>
-        </div>
-        <div class="transferLine">
-          <div class="transferSub">轉給贏家</div>
           <div class="transferAmt mono">-${fmtMoney(t.amount)}</div>
+        </div>
+        <div class="transferLine transferTo">
+          <div class="transferArrow">→</div>
+          <div class="transferWho transferToName">${escapeHtml(players[t.to])}</div>
         </div>
       </div>
     `;
