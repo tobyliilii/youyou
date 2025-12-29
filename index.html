@@ -43,17 +43,29 @@
     }
 
     *{ box-sizing:border-box; }
-    html,body{ height:100%; }
+    html,body{ min-height:100%; }
+    html{ background:var(--bg); }
     body{
       margin:0;
-      background:
-        radial-gradient(1200px 700px at 15% 10%, rgba(78,123,255,.16), transparent 60%),
-        radial-gradient(900px 600px at 85% 25%, rgba(124,176,255,.10), transparent 55%),
-        var(--bg);
+      min-height:100%;
+      background:transparent; /* background handled by fixed layer */
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",system-ui,sans-serif;
       -webkit-text-size-adjust:100%;
       padding-bottom:calc(18px + env(safe-area-inset-bottom));
+      position:relative;
+      z-index:0;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(1200px 700px at 15% 10%, rgba(78,123,255,.16), transparent 60%),
+        radial-gradient(900px 600px at 85% 25%, rgba(124,176,255,.10), transparent 55%),
+        var(--bg);
+      pointer-events:none;
+      z-index:-1;
     }
 
     .app{
