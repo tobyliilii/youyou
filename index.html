@@ -2492,6 +2492,23 @@ html{
   background-attachment: fixed;
 }
 
+/* Paint neon background on both html + body (iOS status bar area sometimes uses body bg) */
+html, body{
+  background:
+    radial-gradient(1100px 720px at 86% 18%, rgba(255, 76, 45, .22), transparent 58%),
+    radial-gradient(980px 680px at 18% 88%, rgba(255, 170, 55, .14), transparent 60%),
+    radial-gradient(760px 520px at 12% 16%, rgba(255, 115, 55, .10), transparent 56%),
+    radial-gradient(1200px 900px at 50% 50%, rgba(255,255,255,.02), transparent 55%),
+    linear-gradient(180deg, rgba(0,0,0,.68), rgba(0,0,0,.80)),
+    var(--bg);
+  background-attachment: fixed;
+}
+/* Disable legacy fixed bg layer so it doesn't fight root backgrounds */
+body::before{
+  background: none !important;
+}
+
+
 /* Use html background so it reaches iOS safe areas (status bar / notch) */
 body::before{ background:none !important; }
 body::after{ opacity:0 !important; }
