@@ -958,15 +958,30 @@ input{
 .roundTitle .rType{ font-weight:900; }
 .roundTitle .rWinnerOnly{
   margin-top:10px;
-  font-size:34px;
-  font-weight:900;
-  letter-spacing:.2px;
-  color: rgba(255,255,255,.96);
   display:flex;
-  flex-wrap:wrap;
-  align-items:center;
+  flex-direction:column;   /* A first line, summary second line */
+  align-items:flex-start;
   gap:10px;
 }
+
+.roundTitle .rWinner{
+  font-size:52px;
+  font-weight:900;
+  letter-spacing:.2px;
+  line-height:1;
+  color: rgba(255,255,255,.96);
+}
+
+.roundTitle .rSummary{
+  font-size:18px;
+  font-weight:850;
+  letter-spacing:.15px;
+  line-height:1.25;
+  color: rgba(231,238,252,.78);
+  max-width:100%;
+  width:100%;
+}
+
 .roundTitle .rMeta{
   margin-top:8px;
   font-size:24px;
@@ -2237,7 +2252,7 @@ body.mobile-preview .app{
   line-height:1.6;
   color: rgba(231,238,252,.52);
   background: rgba(231,238,252,.06);
-  border:1px solid rgba(231,238,252,.14);
+  border:none;
 }
 .roundTitle .rMeta .metaTag{ margin-left:2px; }
 
@@ -2273,6 +2288,155 @@ body.mobile-preview .app{
     height:22px !important;
   }
 }
+
+
+
+/* ===== v11: Round card polish (B+C+D) ===== */
+/* C) Reduce “heavy inset” feel: flatter surface, tighter radius */
+.roundCard{
+  background:
+    radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.05), rgba(255,255,255,0) 60%),
+    var(--surface2) !important;
+  border:1px solid rgba(255,255,255,.07) !important;
+  box-shadow: var(--shadow-small) !important;
+  padding:20px 20px !important;
+  border-radius:26px !important;
+}
+.roundCard.isYoujin{
+  border:1px solid rgba(245,210,74,.38) !important;
+}
+@media (max-width:520px){
+  .roundCard{
+    padding:20px 20px !important;
+    border-radius:26px !important;
+  }
+}
+
+/* D) Header row: #1 + dealer meta (left), status tags (right) */
+.roundTitle .rTop.rTop--header{
+  font-weight:800;
+  color: rgba(255,255,255,.60);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+.roundTitle .rTopLeft{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.roundTitle .rIdxPill{
+  flex:0 0 auto;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.2px;
+  color: rgba(231,238,252,.58);
+  background: rgba(231,238,252,.05); /* subtle fill, no outline */
+  border:none;
+  box-shadow:none;
+}
+.roundTitle .rDealer{
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.roundTitle .rTopRight{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+.roundTitle .rTopRight .metaTag{
+  margin-left:0 !important;
+}
+.metaTag--youjin{
+  opacity:.9;
+}
+
+/* B) Meta -> chips (water / type / score) */
+.roundTitle .rMeta.rChips{
+  margin-top:14px !important;
+  font-size:14px !important;
+  font-weight:800 !important;
+  color: rgba(255,255,255,.86) !important;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.rChips .chip{
+  display:inline-flex;
+  align-items:center;
+  padding:7px 12px;
+  border-radius:999px;
+  font-size:14px;
+  font-weight:850;
+  letter-spacing:.15px;
+  line-height:1.25;
+  color: rgba(255,255,255,.86);
+  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.10);
+}
+.rChips .chip--sub{
+  color: rgba(231,238,252,.66);
+  border-color: rgba(231,238,252,.12);
+  background: rgba(231,238,252,.05);
+}
+
+@container (max-width:520px){
+  .roundTitle .rTop.rTop--header{ margin-bottom:10px; }
+  .roundTitle .rDealer{ font-size:13px; }
+  .roundTitle .rWinner{ font-size:44px; }
+  .roundTitle .rSummary{ font-size:16px; }
+  .roundTitle .rMeta.rChips{ margin-top:12px !important; }
+  .rChips .chip{ font-size:13px; padding:6px 11px; }
+}
+
+/* ===== v6: cleaner round record card ===== */
+.rIdxPill{
+  padding:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  color: rgba(231,238,252,.45) !important;
+}
+
+.rWinnerOnly{
+  display:grid !important;
+  grid-template-columns: 1fr auto !important;
+  grid-template-rows: auto auto !important;
+  column-gap:16px !important;
+  row-gap:10px !important;
+  align-items:start !important;
+}
+
+.rWinnerOnly .rWinner{ grid-column:1; grid-row:1; }
+.rWinnerOnly .rSummary{ grid-column:1; grid-row:2; }
+
+.rWinnerOnly .roundActions{
+  grid-column:2;
+  grid-row:1 / span 2;
+  align-self:end;
+  justify-self:end;
+  margin-top:0 !important;
+  display:flex !important;
+}
+
+.roundActions{ margin-top:0 !important; }
+
+.roundDelBtn{
+  opacity:.9;
+}
+.roundCard:hover .roundDelBtn{ opacity:1; }
+
+/* tighten vertical rhythm a touch */
+.rWinnerOnly{ margin-top:8px !important; }
 
 </style>
 </head>
@@ -3016,43 +3180,40 @@ const streakText = (carry > 0) ? `連${carry}` : "";
         <div class="card roundCard ${hasYou ? "isYoujin" : ""}">
           <div class="roundHeader">
             <div class="roundTitle">
-              <div class="rTop">
-  <div class="rTopLeft">
-    <span class="rIdx">${idx+1}.</span>
-    <span class="rDealer" title="${escapeHtml(players[r.dealer])}">莊家:${escapeHtml(players[r.dealer])}</span>
-  </div>
-  <div class="rTopRight">
-    ${streakText ? `<span class="streakMini">${streakText}</span>` : ""}
-  </div>
-</div>
+              <div class="rTop rTop--header">
+                <div class="rTopLeft">
+                  <span class="rIdxPill">#${idx+1}</span>
+                  <span class="rDealer" title="${escapeHtml(players[r.dealer])}">莊家 · ${escapeHtml(players[r.dealer])}</span>
+                </div>
+                <div class="rTopRight">
+                  ${streakText ? `<span class="streakMini">${streakText}</span>` : ""}
+                  ${(r.type==="danyou"||r.type==="shuangyou") ? '<span class="metaTag metaTag--youjin">游金</span>' : ''}
+                </div>
+              </div>
               <div class="rWinnerOnly">
                 <span class="rWinner">${escapeHtml(players[r.winner])}</span>
-                
-              </div>
-              <div class="rMeta">
-                <span class="rWater">${r.water}水</span>
-                <span class="rStar">・</span>
-                <span class="rType">${escapeHtml(typeLabel(r.type))}</span>
-                ${(r.type==="danyou"||r.type==="shuangyou") ? '<span class="metaTag metaTag--youjin">游金</span>' : ''}
-              </div>
-              <div class="rSub">${sub}</div>
+                <span class="rSummary">${r.water}水 · ${escapeHtml(typeLabel(r.type))}${sub ? ` · ${escapeHtml(sub)}` : ""}</span>
+              
+                <div class="roundActions">
+                            <button class="roundDelBtn" onclick="removeRound(${idx})" aria-label="刪除本局" title="刪除本局">
+                                          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="display:block">
+                              <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 7h16"/>
+                                <path d="M10 3h4"/>
+                                <path d="M6 7l1 14h10l1-14"/>
+                                <path d="M10 11v6"/>
+                                <path d="M14 11v6"/>
+                              </g>
+                            </svg>
+                                        </button>
+                          </div>
+                </div>
+
             </div>
           </div>
 
           <div class="mono roundLines roundLinesDesktop">${lines}</div>
-          <div class="roundActions">
-            <button class="roundDelBtn" onclick="removeRound(${idx})" aria-label="刪除本局" title="刪除本局">
-                          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="display:block">
-              <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 7h16"/>
-                <path d="M10 3h4"/>
-                <path d="M6 7l1 14h10l1-14"/>
-                <path d="M10 11v6"/>
-                <path d="M14 11v6"/>
-              </g>
-            </svg>
-                        </button>
-          </div>
+          
         </div>
       `;
     }).join("");
