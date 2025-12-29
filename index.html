@@ -3,8 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0708" media="(prefers-color-scheme: dark)" />
-  <title>游來游去</title>
+
+  <meta name="theme-color" content="#22090a" />
+  <meta name="theme-color" content="#22090a" media="(prefers-color-scheme: dark)" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>游來游去</title>
   <!-- v5: water 44px, widen selects, remove per-person red packet; you bonus fixed +10 -->
 
   <style>
@@ -49,7 +53,7 @@
     body{
       margin:0;
       min-height:100%;
-      background:transparent; /* background handled by fixed layer */
+      background:transparent; background-color:#22090a; /* background handled by fixed layer */
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",system-ui,sans-serif;
       -webkit-text-size-adjust:100%;
@@ -2483,25 +2487,27 @@ body.mobile-preview .app{
 
 html{
   background:
-    radial-gradient(1100px 720px at 86% 18%, rgba(255, 76, 45, .22), transparent 58%),
+        radial-gradient(900px 420px at 50% 0%, rgba(255, 110, 60, .18), transparent 62%),
+radial-gradient(1100px 720px at 86% 18%, rgba(255, 76, 45, .22), transparent 58%),
     radial-gradient(980px 680px at 18% 88%, rgba(255, 170, 55, .14), transparent 60%),
     radial-gradient(760px 520px at 12% 16%, rgba(255, 115, 55, .10), transparent 56%),
     radial-gradient(1200px 900px at 50% 50%, rgba(255,255,255,.02), transparent 55%),
     linear-gradient(180deg, rgba(0,0,0,.68), rgba(0,0,0,.80)),
     var(--bg);
-  background-attachment: fixed;
+
 }
 
 /* Paint neon background on both html + body (iOS status bar area sometimes uses body bg) */
 html, body{
   background:
-    radial-gradient(1100px 720px at 86% 18%, rgba(255, 76, 45, .22), transparent 58%),
+        radial-gradient(900px 420px at 50% 0%, rgba(255, 110, 60, .18), transparent 62%),
+radial-gradient(1100px 720px at 86% 18%, rgba(255, 76, 45, .22), transparent 58%),
     radial-gradient(980px 680px at 18% 88%, rgba(255, 170, 55, .14), transparent 60%),
     radial-gradient(760px 520px at 12% 16%, rgba(255, 115, 55, .10), transparent 56%),
     radial-gradient(1200px 900px at 50% 50%, rgba(255,255,255,.02), transparent 55%),
     linear-gradient(180deg, rgba(0,0,0,.68), rgba(0,0,0,.80)),
     var(--bg);
-  background-attachment: fixed;
+
 }
 /* Disable legacy fixed bg layer so it doesn't fight root backgrounds */
 body::before{
