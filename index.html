@@ -2635,58 +2635,68 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
 
 
 /* ===== Seat-map (玩家/莊) ===== */
-.seatTitleRow{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-.seatTitle{ font-size:22px; letter-spacing:.2px; }
-
 .seatWrap{ position:relative; }
 
 .seatBoard{
+  /* seat sizing tokens (fit within the board's inner width) */
+  --tokenSize: 70px;
+  --seatGap: 16px;
+  /* seat cards will shrink-to-fit on small screens, but won't grow endlessly */
+  --seatMaxW: 220px;
+  --seatH: clamp(80px, 18vw, 118px);
+
   position:relative;
-  border-radius:28px;
-  border:1px solid rgba(255,255,255,.10);
-  background:
-    radial-gradient(120% 160% at 18% 0%, rgba(255,255,255,.05), rgba(255,255,255,0) 55%),
-    linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)),
-    var(--surface);
-  box-shadow: var(--shadow-small);
-  padding:18px 18px 78px;
-  overflow:hidden;
+  /* no inner "blue frame" — let the outer .card provide the container */
+  padding:0 0 56px;
+  overflow:visible;
 }
 
+.seatBoardTitle{
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:.2px;
+  margin:0 0 14px;
+}
+
+/* Use a simple 3x3 grid (like a seat map) and overlay the dealer chip at center */
 .seatGrid{
+  position:relative;
   display:grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: auto auto auto;
-  grid-template-areas:
-    "top top top"
-    "left token right"
-    "bottom bottom bottom";
-  gap:16px 16px;
+  width:100%;
+  column-gap: var(--seatGap);
+  row-gap: var(--seatGap);
   align-items:center;
+  justify-items:center;
+  padding: 6px 0;
 }
 
 .seatCard{
   position:relative;
-  border-radius:24px;
+  border-radius:22px;
   border:1px solid rgba(255,255,255,.10);
   background: var(--surface2);
   box-shadow: var(--shadow-pressed);
-  min-height:98px;
-  padding:14px 14px;
+  width: 100%;
+  max-width: var(--seatMaxW);
+  height: var(--seatH);
+  padding:12px 12px;
   display:flex;
   align-items:center;
   justify-content:center;
   text-align:center;
   cursor:pointer;
   user-select:none;
+  min-height:unset;
 }
 .seatCard:active{ transform: translateY(1px); }
 
 .seatCard .seatName{
   font-weight:900;
   letter-spacing:.2px;
-  font-size:30px;
-  line-height:1.08;
+  font-size: clamp(18px, 4vw, 20px);          /* -2 sizes */
+  line-height: 1.12;
   color: rgba(241,244,251,.98);
   text-align:center;
   white-space:normal;
@@ -2697,37 +2707,42 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
   overflow:hidden;
 }
 
-.seatTop{ grid-area: top; justify-self:center; width:68%; max-width:320px; }
-.seatBottom{ grid-area: bottom; justify-self:center; width:68%; max-width:320px; }
-.seatLeft{ grid-area: left; }
-.seatRight{ grid-area: right; }
+.seatTop{ grid-column:2; grid-row:1; justify-self:center; }
+.seatLeft{ grid-column:1; grid-row:2; justify-self:center; }
+.seatRight{ grid-column:3; grid-row:2; justify-self:center; }
+.seatBottom{ grid-column:2; grid-row:3; justify-self:center; }
 
 @media (max-width:520px){
-  .seatBoard{ padding:16px 16px 74px; }
-  .seatCard{ min-height:92px; border-radius:22px; }
-  .seatCard .seatName{ font-size:26px; }
-  .seatTop, .seatBottom{ width:74%; }
+  .seatBoard{
+    padding:14px 14px 54px;
+    --tokenSize: 62px;
+    --seatGap: 14px;
+    --seatMaxW: 200px;
+    --seatH: clamp(78px, 22vw, 108px);
+  }
+  .seatCard{ border-radius:20px; }
+  .seatCard .seatName{ font-size:22px; } /* -2 sizes */
 }
 
 .seatBadgeSlot{
   position:absolute;
   top:10px;
   right:10px;
-  min-width:0;
-  min-height:0;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
 .seatCenter{
-  grid-area: token;
-  width:70px;
-  height:70px;
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform: translate(-50%,-50%);
+  width:var(--tokenSize);
+  height:var(--tokenSize);
   display:flex;
   align-items:center;
   justify-content:center;
-  position:relative;
 }
 
 .dealerChip{
@@ -2748,44 +2763,47 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
   touch-action:none;
 }
 .dealerChip:active{ cursor:grabbing; }
-.dealerChip.is-docked{ width:38px; height:38px; font-size:16px; }
+.dealerChip.is-docked{ width:34px; height:34px; font-size:15px; }
 .dealerChip.is-dragging{ cursor:grabbing; filter: drop-shadow(0 14px 20px rgba(0,0,0,.45)); }
 
-/* Drop-zone affordance (only when 未設莊) */
+/* Drop-zone affordance (when 尚未設莊) */
 .seatCard.is-dropZone{ border-color: rgba(255,166,138,.22); }
 .seatCard.is-dropTarget{ border-color: rgba(255,166,138,.62); box-shadow: 0 0 0 3px rgba(255,118,92,.12), var(--shadow-pressed); }
 
-/* Hand guide (only when 未設莊) */
-.dealerGuide{ position:absolute; left:50%; top:50%; transform: translate(-50%,-50%); pointer-events:none; opacity:0; }
-.dealerGuide.is-active{ opacity:1; }
-.dealerGuide .guideHand{ font-size:22px; filter: drop-shadow(0 10px 16px rgba(0,0,0,.5)); animation: dealerGuideMove 1.55s ease-in-out infinite; }
-@keyframes dealerGuideMove{
-  0%{ transform: translate(0,0) scale(.98); opacity:0; }
-  18%{ opacity:1; }
-  62%{ transform: translate(0,-112px) scale(1); opacity:1; }
-  100%{ transform: translate(0,-112px) scale(.96); opacity:0; }
-}
-
-/* Swap button (icon + tiny label) */
+/* Swap button (small rotate icon + tiny label at bottom-right) */
 .swapBtn{
   position:absolute;
-  right:18px;
+  right:16px;
   bottom:14px;
-  width:70px;
-  height:66px;
-  border-radius:18px;
+  height:34px;
+  min-height:34px !important;
+  padding:0 10px;
+  border-radius:999px;
   background: rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow: var(--shadow-small);
-  display:flex;
-  flex-direction:column;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:none !important;
+  display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:6px;
+  gap:8px;
+  width:auto !important;
 }
-.swapBtn svg{ opacity:.92; }
-.swapBtn:active{ box-shadow: var(--shadow-pressed); transform: translateY(1px); }
+.swapBtn svg{ opacity:.88; display:block; }
+.swapBtn:active{ background: rgba(255,255,255,.035) !important; transform: translateY(1px); }
 .swapLabel{ font-size:11px; letter-spacing:.2px; color: rgba(241,244,251,.42); }
+
+
+/* Soft guidance pulse */
+.dealerChip.is-pulse{
+  animation: chipPulse .9s ease-in-out 1;
+}
+@keyframes chipPulse{
+  0%{ transform: scale(1); box-shadow: 0 0 0 0 rgba(255,120,80,.0); }
+  35%{ transform: scale(1.04); box-shadow: 0 0 0 10px rgba(255,120,80,.16); }
+  70%{ transform: scale(1.01); box-shadow: 0 0 0 18px rgba(255,120,80,.0); }
+  100%{ transform: scale(1); box-shadow: 0 0 0 0 rgba(255,120,80,.0); }
+}
+
 
 /* Name modal */
 .nameModal{ position:fixed; inset:0; z-index:9999; display:none; }
@@ -2835,13 +2853,10 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
   </div>
 
     <div class="card">
-      <div class="seatTitleRow">
-        <strong class="seatTitle">玩家/莊</strong>
-      </div>
       <div class="seatWrap">
         <div id="namesRow" class="seatBoard"></div>
         <button id="resetBtn" class="swapBtn" type="button" aria-label="換人" title="換人">
-          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" style="display:block">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <path fill="#ffffff" d="M12 5a7 7 0 0 1 6.5 4.4h-2.2a.9.9 0 0 0-.7 1.5l3.5 4a.9.9 0 0 0 1.4 0l3.5-4a.9.9 0 0 0-.7-1.5h-2.1A9 9 0 1 0 21 12h-2a7 7 0 1 1-7-7z"/>
           </svg>
           <span class="swapLabel">換人</span>
@@ -2849,8 +2864,7 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
       </div>
     </div>
 
-
-    <div class="card">
+<div class="card">
       <div class="row formRow">
         <div class="dealerField sr-only" aria-hidden="true">
           <label>莊家</label>
@@ -3000,6 +3014,17 @@ function getBustedTaunt(idx){
 
 const START_STACK = 100; // 每局每人起始 100
 
+// 連莊規則：逆時針當莊（以座位佈局 A(top)=0, B(left)=1, C(right)=2, D(bottom)=3）
+// 逆時針順序：A(0) → B(1) → D(3) → C(2) → A(0)
+const CCW_ORDER = [0, 1, 3, 2];
+function nextDealerCCW(d){
+  const n = CCW_ORDER.length;
+  const i = CCW_ORDER.indexOf(d);
+  if (i === -1) return (Number(d) + 1) % (players.length || 4);
+  return CCW_ORDER[(i + 1) % n];
+}
+
+
 function computeAllRoundsDetailed(){
   const n = players.length;
   let remain = Array(n).fill(START_STACK);
@@ -3110,11 +3135,13 @@ function computeAllRoundsDetailed(){
     }
 
     // 推進「下一把」莊家/連莊
+    // - 莊家贏：連莊+1
+    // - 莊家沒贏：莊位逆時針順到下一位（不看贏家）
     if (r0.winner === r0.dealer){
       expectedDealer = r0.dealer;
       expectedStreak = dealerStreak + 1;
     } else {
-      expectedDealer = r0.winner;
+      expectedDealer = nextDealerCCW(r0.dealer);
       expectedStreak = 1;
     }
 
@@ -3143,6 +3170,50 @@ function setRoundLocked(isLocked, reasonText=""){
     btn.style.cursor = isLocked ? "not-allowed" : "";
     btn.title = isLocked ? (reasonText || "本局已結算") : "";
   }
+}
+
+// v6: Record button lock should respect「尚未設莊」與「輸光結算」
+let lastBustedIdx = null;
+
+function maybeResetDealerOnBust(bustedIdx){
+  if (bustedIdx == null){
+    lastBustedIdx = null;
+    return;
+  }
+  if (lastBustedIdx == null){
+    lastBustedIdx = bustedIdx;
+    // 有人輸光本金：莊家重置（需重新起莊）
+    dealerManualOverride = false;
+    try{
+      const dealerSel = document.getElementById("dealerSel");
+      if (dealerSel) dealerSel.value = "0";
+    }catch(e){}
+    try{ setDealerAssigned(false); }catch(e){}
+  }
+}
+
+function setRoundSoftLocked(isSoft, reasonText=""){
+  const btn = document.getElementById("addRoundBtn");
+  if(!btn) return;
+  btn.disabled = false; // soft-lock keeps it clickable
+  btn.dataset.softLocked = isSoft ? "1" : "";
+  btn.style.opacity = isSoft ? "0.60" : "";
+  btn.style.cursor = isSoft ? "pointer" : "";
+  btn.title = isSoft ? (reasonText || "請先設定起莊") : "";
+}
+
+function syncRecordLock(bustedIdx){
+  if (bustedIdx != null){
+    setRoundLocked(true, `本局已結算：${getBustedTaunt(bustedIdx)}`);
+    return;
+  }
+  if (!dealerAssigned){
+    // Soft lock: keep clickable, but prompt user to set dealer
+    setRoundSoftLocked(true, "請先拖曳「莊」到座位，設定起莊");
+    return;
+  }
+  setRoundSoftLocked(false);
+  setRoundLocked(false);
 }
 
   let rounds = [];
@@ -3295,19 +3366,11 @@ function setRoundLocked(isLocked, reasonText=""){
 
   function setDealerAssigned(v){
     dealerAssigned = !!v;
-    try{ updateDealerGuide(); }catch(e){}
-    try{ updateDealerDropZones(); }catch(e){}
-  }
-
-  function updateDealerGuide(){
-    const guide = document.getElementById("dealerGuide");
-    if(!guide) return;
-    const on = (!dealerAssigned && !rounds.length);
-    guide.classList.toggle("is-active", !!on);
+try{ updateDealerDropZones(); }catch(e){}
   }
 
   function updateDealerDropZones(){
-    const on = (!dealerAssigned && !rounds.length);
+    const on = (!dealerAssigned);
     document.querySelectorAll(".seatCard[data-seat]").forEach(el=>{
       el.classList.toggle("is-dropZone", !!on);
     });
@@ -3321,15 +3384,13 @@ function setRoundLocked(isLocked, reasonText=""){
     const dealerSel = document.getElementById("dealerSel");
 
     let target = center;
-    if (dealerAssigned || rounds.length){
+    if (dealerAssigned){
       const d = Number((dealerSel && dealerSel.value != null) ? dealerSel.value : 0);
       target = document.querySelector(`.seatBadgeSlot[data-slot="${d}"]`) || center;
     }
 
     if (target && chip.parentElement !== target) target.appendChild(chip);
     chip.classList.toggle("is-docked", target && target.classList.contains("seatBadgeSlot"));
-
-    updateDealerGuide();
     updateDealerDropZones();
   }
 
@@ -3386,8 +3447,8 @@ function setRoundLocked(isLocked, reasonText=""){
         setDealerAssigned(true);
       }
 
-      // 回到正確容器
-      renderDealerChip();
+      // 同步 UI（含記錄按鈕/下一把莊位）
+      renderAll();
     }
 
     chip.addEventListener("pointerdown", (e)=>{
@@ -3472,7 +3533,7 @@ function setRoundLocked(isLocked, reasonText=""){
 
     if(!root.dataset.inited){
       root.dataset.inited = "1";
-      root.innerHTML = `
+      root.innerHTML = `        <div class="seatBoardTitle">玩家/莊</div>
         <div class="seatBoardInner">
           <div class="seatGrid" id="seatGrid">
             <button type="button" class="seatCard seatTop" data-seat="0" aria-label="玩家 1">
@@ -3485,7 +3546,6 @@ function setRoundLocked(isLocked, reasonText=""){
             </button>
             <div class="seatCenter" id="seatCenter" aria-label="莊">
               <button id="dealerChip" type="button" class="dealerChip" aria-label="拖曳莊籌碼到座位">莊</button>
-              <div id="dealerGuide" class="dealerGuide" aria-hidden="true"><div class="guideHand">☝︎</div></div>
             </div>
             <button type="button" class="seatCard seatRight" data-seat="2" aria-label="玩家 3">
               <div class="seatBadgeSlot" data-slot="2"></div>
@@ -3661,6 +3721,24 @@ function setRoundLocked(isLocked, reasonText=""){
     setRoundLocked(true, "本局已結算");
     return;
   }
+  if (!dealerAssigned){
+    alert("請先拖曳「莊」到任一座位，設定起莊。");
+    try{
+      const wrap = document.querySelector(".seatWrap");
+      if (wrap) wrap.scrollIntoView({ behavior: "smooth", block: "center" });
+      const chip = document.getElementById("dealerChip");
+      if (chip){
+        chip.classList.remove("is-pulse");
+        // restart animation
+        void chip.offsetWidth;
+        chip.classList.add("is-pulse");
+        setTimeout(()=>chip.classList.remove("is-pulse"), 950);
+      }
+    }catch(e){}
+    syncRecordLock(null);
+    return;
+  }
+
 
   const dealer = Number($("dealerSel").value);
   const winner = Number($("winnerSel").value);
@@ -3683,9 +3761,6 @@ function setRoundLocked(isLocked, reasonText=""){
   const youSelected = ($("youSel") && $("youSel").value === "yes");
 
   rounds.push({ dealer, winner, type, water, youSelected });
-
-  // ✅ 第一次記錄：視為已設莊（即便使用預設值）
-  if (!dealerAssigned) setDealerAssigned(true);
 
   // 記錄後：回到自動同步「下一把莊家 + 連莊」
   dealerManualOverride = false;
@@ -3921,7 +3996,9 @@ function renderTotalsAndTransfers(){
     `;
     fitAllTotalsNames();
 
-    setRoundLocked(bustedIdx != null, bustedIdx != null ? `本局已結算：${getBustedTaunt(bustedIdx)}` : "");
+    maybeResetDealerOnBust(bustedIdx);
+
+    syncRecordLock(bustedIdx);
     $("transfersArea").innerHTML = "";
     return;
   }
@@ -3953,7 +4030,9 @@ function renderTotalsAndTransfers(){
     fitAllTotalsNames();
 
 
-  setRoundLocked(bustedIdx != null, bustedIdx != null ? `本局已結算：${getBustedTaunt(bustedIdx)}` : "");
+  maybeResetDealerOnBust(bustedIdx);
+
+    syncRecordLock(bustedIdx);
   $("transfersArea").innerHTML = "";
 }
   function renderAll(){
@@ -3966,21 +4045,28 @@ function renderTotalsAndTransfers(){
   function resetAll(){
   rounds = [];
   dealerManualOverride = false;
+  lastBustedIdx = null;
+
+  // 換人/重開：需要重新起莊
   try{ setDealerAssigned(false); }catch(e){}
-  try{ setDealerAssigned(false); }catch(e){}
+
   renderSelectors();
 
-  // ✅ 換人/重開：回到「胡牌」，解除單游/雙游的游金強制
+  // 回到預設：胡牌、游金=無（單游/雙游會在 syncWaterByType 內強制）
   try{
     $("typeSel").value = "dao";
     youForcedByType = false;
     if ($("youSel")) $("youSel").disabled = false;
   }catch(e){}
 
-  // ✅ 游金回到「無」
   try{
     if (typeof setYouValue === "function") setYouValue("none");
     else if ($("youSel")) $("youSel").value = "none";
+  }catch(e){}
+
+  // 起莊選擇回到 A（但仍需拖曳籌碼）
+  try{
+    if ($("dealerSel")) $("dealerSel").value = "0";
   }catch(e){}
 
   // 同步 UI
@@ -3988,8 +4074,8 @@ function renderTotalsAndTransfers(){
   try{ toggleYouUI(); }catch(e){}
   try{ updateYouPill(); }catch(e){}
 
-  // ✅ 解鎖新增
-  try{ setRoundLocked(false); }catch(e){}
+  // 記錄按鈕狀態：尚未設莊 → 鎖住
+  try{ syncRecordLock(null); }catch(e){}
 
   renderAll();
 }
@@ -4039,15 +4125,20 @@ function renderTotalsAndTransfers(){
   $("clearRoundsBtn").addEventListener("click", ()=>{
   rounds = [];
   dealerManualOverride = false;
+  lastBustedIdx = null;
 
-  // ✅ 清空後：回到「胡牌」，解除單游/雙游的游金強制
+  // 清空後：需要重新起莊
+  try{ setDealerAssigned(false); }catch(e){}
+  try{ if ($("dealerSel")) $("dealerSel").value = "0"; }catch(e){}
+
+  // 清空後：回到「胡牌」，解除單游/雙游的游金強制
   try{
     $("typeSel").value = "dao";
     youForcedByType = false;
     if ($("youSel")) $("youSel").disabled = false;
   }catch(e){}
 
-  // ✅ 清空後：游金回到「無」（避免下一局 badge 不顯示）
+  // 清空後：游金回到「無」
   try{
     if (typeof setYouValue === "function") setYouValue("none");
     else if ($("youSel")) $("youSel").value = "none";
@@ -4058,8 +4149,8 @@ function renderTotalsAndTransfers(){
   try{ toggleYouUI(); }catch(e){}
   try{ updateYouPill(); }catch(e){}
 
-  // ✅ 新局：解鎖「記錄」
-  try{ setRoundLocked(false); }catch(e){}
+  // 記錄按鈕狀態：尚未設莊 → 鎖住
+  try{ syncRecordLock(null); }catch(e){}
 
   renderAll();
 });
