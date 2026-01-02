@@ -3841,16 +3841,16 @@ function syncRecordLock(bustedIdx){
         btn.addEventListener("pointercancel", cancel);
         btn.addEventListener("pointerleave", cancel);
 
-        btn.addEventListener\("click", \(e\)=>\{
-          if \(btn\.classList\.contains\("is-editing"\)\) return;
-          if \(btn\.dataset\.ignoreClick === "1"\)\{
-            btn\.dataset\.ignoreClick = "0";
-            e\.preventDefault\(\);
-            e\.stopPropagation\(\);
+        btn.addEventListener("click", (e)=>{
+          if (btn.classList.contains("is-editing")) return;
+          if (btn.dataset.ignoreClick === "1"){
+            btn.dataset.ignoreClick = "0";
+            e.preventDefault();
+            e.stopPropagation();
             return;
-          \}
-          startInlineNameEdit\(idx, btn\);
-        \}\);
+          }
+          startInlineNameEdit(idx, btn);
+        });
 
         // Keyboard accessibility (desktop)
         btn.addEventListener("keydown", (e)=>{
