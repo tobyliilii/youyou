@@ -1,0 +1,4873 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+
+  <meta name="theme-color" content="#22090a" />
+  <meta name="theme-color" content="#22090a" media="(prefers-color-scheme: dark)" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>游來游去</title>
+  <!-- v5: water 44px, widen selects, remove per-person red packet; you bonus fixed +10 -->
+
+  <style>
+    :root{
+      /* Dark Soft UI tokens */
+      --bg:#0b111a;
+      --surface:#0f1723;     /* card base */
+      --surface2:#0d1520;    /* pressed */
+      --text:#e7eefc;
+      --muted:rgba(231,238,252,.65);
+
+      --hi:rgba(255,255,255,.06);
+      --lo:rgba(0,0,0,.58);
+      --stroke:rgba(255,255,255,.07);
+
+      --r-xl:26px;
+      --r-lg:18px;
+      --r-md:14px;
+      --r-sm:12px;
+
+      --shadow-raised:
+        -10px -10px 22px var(--hi),
+         10px  10px 22px var(--lo);
+
+      --shadow-pressed:
+        inset -6px -6px 12px rgba(255,255,255,.05),
+        inset  6px  6px 12px rgba(0,0,0,.55);
+
+      --shadow-small:
+        -6px -6px 14px rgba(255,255,255,.045),
+         6px  6px 14px rgba(0,0,0,.55);
+
+      --accent:#4E7BFF;
+      --accent2:#7CB0FF;
+
+      --tableLine:rgba(255,255,255,.06);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ min-height:100%; }
+    html{ background:var(--bg); }
+    body{
+      margin:0;
+      min-height:100%;
+      background:transparent; background-color:#22090a; /* background handled by fixed layer */
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",system-ui,sans-serif;
+      -webkit-text-size-adjust:100%;
+      padding-bottom:calc(18px + env(safe-area-inset-bottom));
+      position:relative;
+      z-index:1;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(1200px 700px at 15% 10%, rgba(78,123,255,.16), transparent 60%),
+        radial-gradient(900px 600px at 85% 25%, rgba(124,176,255,.10), transparent 55%),
+        var(--bg);
+      pointer-events:none;
+      z-index:-1;
+    }
+
+    .app{
+      max-width:860px;
+      margin:0 auto;
+      padding:calc(18px + env(safe-area-inset-top)) 16px 22px;
+    }
+
+    h1{ margin:8px 0 6px; font-size:22px; line-height:1.2; letter-spacing:.2px; }
+    .muted{ color:var(--muted); font-size:13px; line-height:1.55; }
+
+    /* ====== Soft UI surfaces ====== */
+    .card{
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0)),
+        var(--surface);
+      border:1px solid var(--stroke);
+      border-radius:var(--r-xl);
+      padding:24px;
+      margin:14px 0;
+      box-shadow:var(--shadow-raised);
+    }
+
+    /* smaller inner cards (per-round) */
+    .roundCard{
+      padding:18px;
+      margin-top:12px;
+      border-radius:20px;
+      box-shadow:var(--shadow-small);
+    }
+
+    /* general form row */
+    .row{
+  align-items:center !important;
+ display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+    .row > div{
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+    }
+
+    label{ font-size:12px; color:var(--muted); display:block; margin-bottom:8px; letter-spacing:.2px; }
+
+    input,select,button{
+      border-radius:var(--r-md);
+      font-size:16px;
+      color:var(--text);
+      min-height:44px;
+      outline:none;
+    }
+
+    /* pressed fields */
+    input,select{
+      padding:12px 14px;
+      border:1px solid rgba(255,255,255,.06);
+      background:var(--surface2);
+      box-shadow:var(--shadow-pressed);
+    }
+    input[type="number"], input[type="text"]{ width:160px; }
+
+    /* buttons (raised) */
+    button{
+      cursor:pointer;
+      background:var(--surface);
+      border:1px solid rgba(255,255,255,.09);
+      box-shadow:var(--shadow-raised);
+      font-weight:800;
+      padding:0 16px;
+      transition:transform .08s ease, box-shadow .12s ease, filter .12s ease;
+    }
+    button:hover{ filter:brightness(1.06); }
+    button:active{
+      transform: translateY(1px);
+      box-shadow:var(--shadow-pressed);
+    }
+
+    /* secondary/ghost buttons */
+    .resetBtn,
+    #clearRoundsBtn,
+    .roundHeader button{
+      background:transparent;
+      box-shadow:none;
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .resetBtn:hover,
+    #clearRoundsBtn:hover,
+    .roundHeader button:hover{
+      filter:none;
+      background:rgba(255,255,255,.04);
+    }
+    .resetBtn:active,
+    #clearRoundsBtn:active,
+    .roundHeader button:active{
+      transform: translateY(1px);
+      box-shadow:var(--shadow-pressed);
+      background:rgba(255,255,255,.02);
+    }
+
+    /* primary CTA (記錄本局) */
+    #addRoundBtn{
+  width:92px !important;
+  min-width:92px !important;
+  max-width:92px !important;
+
+  width:80px;
+  min-width:80px;
+      background: linear-gradient(180deg, rgba(124,176,255,.24), rgba(78,123,255,.18)), var(--surface);
+      border-color: rgba(78,123,255,.35);
+    
+}
+
+    /* Tables: flat, clean */
+    table{ width:100%; border-collapse:collapse; margin-top:12px; }
+    th,td{
+      border-bottom:1px solid var(--tableLine);
+      padding:12px 8px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{ font-size:13px; color:var(--muted); font-weight:800; }
+    tbody tr:hover{ background:rgba(255,255,255,.03); }
+
+    .warn{ color:#ff6b6b; font-size:13px; margin-top:10px; }
+    .ok{ color:#3ddc84; font-size:13px; margin-top:10px; }
+    .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; }
+
+    .badge{
+      display:inline-block;
+      padding:2px 10px;
+      border-radius:999px;
+      font-size:12px;
+      background:rgba(255,214,102,.10);
+      color:#ffd666;
+      border:1px solid rgba(255,214,102,.18);
+      margin-left:8px;
+      line-height:1.7;
+      vertical-align:middle;
+      box-shadow: -6px -6px 12px rgba(255,255,255,.04), 6px 6px 12px rgba(0,0,0,.45);
+    }
+
+    .streakBadge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:2px 10px;
+      border-radius:999px;
+      font-size:12px;
+      background:rgba(112,168,255,.10);
+      color:#a6d1ff;
+      border:1px solid rgba(112,168,255,.22);
+      margin-left:8px;
+      line-height:1.7;
+      vertical-align:middle;
+      box-shadow: -6px -6px 12px rgba(255,255,255,.04), 6px 6px 12px rgba(0,0,0,.45);
+      white-space:nowrap;
+    }
+    .streakMul{ opacity:.95; }
+
+    .streakMini{
+      display:inline-flex;
+      align-items:center;
+      padding:1px 8px;
+      border-radius:999px;
+      font-size:12px;
+      background:rgba(112,168,255,.08);
+      color:rgba(166,209,255,.95);
+      border:1px solid rgba(112,168,255,.16);
+      margin-left:8px;
+      line-height:1.6;
+      vertical-align:middle;
+      white-space:nowrap;
+    }
+
+    .roundHeader{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+    }
+    .roundTitle{ font-size:14px; line-height:1.4; flex:1 1 auto; min-width:0; }
+    .roundLines{
+      margin-top:12px;
+      font-size:13px;
+      line-height:1.6;
+      word-break:break-word;
+    }
+    .roundHeader button{
+      height:40px;
+      line-height:40px;
+      padding:0 12px;
+      border-radius:14px;
+      font-size:14px;
+      white-space:nowrap;
+    }
+
+    .formRow{ align-items:flex-end; }
+
+    /* ===== Names area ===== */
+    .namesHeader{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      align-items:end;
+    }
+
+    #namesRow.namesGrid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:14px !important;
+      align-items:stretch;
+    }
+
+    #namesRow.namesGrid > div{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    #namesRow.namesGrid input{
+      width:100%;
+      text-align:center;
+      border-radius:18px;
+      padding:16px 14px;
+      background:var(--surface2);
+      border:1px solid rgba(255,255,255,.06);
+      box-shadow:var(--shadow-pressed);
+    }
+
+    /* ===== Stepper (Water) ===== */
+    .stepper{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:6px;
+      border-radius:18px;
+      background:var(--surface2);
+      border:1px solid rgba(255,255,255,.06);
+      box-shadow:var(--shadow-pressed);
+    }
+
+    /* center 0 */
+    .stepper input[type="number"]{
+      height:44px;
+      padding:0;
+      text-align:center;
+      line-height:44px;
+      width:56px !important;
+      min-width:56px;
+      max-width:56px;
+      flex:0 0 auto;
+      background:transparent;
+      border:0;
+      box-shadow:none;
+    }
+
+    .stepper button{
+      width:44px;
+      height:44px;
+      padding:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+      border-radius:16px;
+      background:var(--surface);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:var(--shadow-small);
+    }
+    .stepper button:active{ box-shadow:var(--shadow-pressed); }
+
+
+    /* ===== Segmented (游金 無/有) ===== */
+    .sr-only{
+      position:absolute !important;
+      width:1px; height:1px;
+      padding:0; margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      white-space:nowrap;
+      border:0;
+    }
+
+    .segmented{
+      display:flex;
+      gap:6px;
+      padding:6px;
+      border-radius:18px;
+      background:var(--surface2);
+      border:1px solid rgba(255,255,255,.06);
+      box-shadow:var(--shadow-pressed);
+      min-height:44px;
+    }
+
+    .seg-btn{
+      flex:1 1 0;
+      height:44px;
+      border-radius:14px;
+      border:1px solid transparent;
+      background:transparent;
+      color:var(--muted);
+      font-weight:900;
+      letter-spacing:.2px;
+      box-shadow:none;
+      padding:0 14px;
+      transition:filter .12s ease, transform .08s ease, box-shadow .12s ease, color .12s ease, background .12s ease;
+    }
+
+    .seg-btn.is-active{
+      color:var(--text);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0)),
+        var(--surface);
+      border-color: rgba(255,255,255,.08);
+      box-shadow: var(--shadow-small);
+    }
+
+    .segmented.is-disabled{
+      opacity:.6;
+      pointer-events:none;
+    }
+
+    /* ===== Select arrow (white) ===== */
+    select{
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      background-image:url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
+<path fill='white' fill-opacity='0.85' d='M6 9l6 6 6-6'/>\
+</svg>");
+      background-repeat:no-repeat;
+      background-size:16px;
+      background-position:right 12px center;
+      padding-right:44px;
+      text-align:center;
+      text-align-last:center;
+    }
+
+    /* ===== Mobile ===== */
+    @media (max-width:520px){
+      .card{ padding:20px; }
+      .namesHeader{
+        grid-template-columns:1fr;
+        gap:12px;
+        align-items:stretch;
+      }
+      #namesRow.namesGrid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:12px !important;
+      }
+      #resetBtn{ width:100%; justify-self:stretch; }
+    }
+
+    /* Desktop: remove number spinner ONLY for waterInput */
+    @media (min-width:521px){
+      #waterInput::-webkit-inner-spin-button,
+      #waterInput::-webkit-outer-spin-button{
+        -webkit-appearance:none;
+        margin:0;
+      }
+      #waterInput{ -moz-appearance:textfield; }
+    }
+
+    button, select, input{ touch-action: manipulation; }
+
+/* ===== v2 UI refinements ===== */
+/* lock all controls to 44px visually */
+button, select, input {
+  height: 44px !important;
+  line-height: 44px;
+}
+
+/* reset -> swap (secondary) */
+#resetBtn{
+  opacity: .55;
+}
+
+/* water compact */
+.stepper{
+  min-width: 120px;
+}
+#waterInput{
+  width: 56px;
+}
+
+/* CTA grow */
+#addRoundBtn{
+  flex: 1;
+}
+
+/* segmented contrast */
+.seg-btn{
+  opacity:.45;
+}
+.seg-btn.is-active{
+  opacity:1;
+}
+
+
+/* ===== v3 refinements (Second row alignment & hierarchy) ===== */
+
+/* 1) True visual 44px baseline: use flex centering, fix select padding/line-height */
+select, button, input{
+  height:44px !important;
+}
+select{
+  padding:0 14px !important;
+  line-height:44px !important;
+}
+button{
+  line-height:44px !important;
+  padding:0 18px !important;
+}
+input{
+  line-height:44px !important;
+  padding:0 12px !important;
+}
+
+/* 2) Labels: bring back readable contrast (not too loud) */
+.formRow label{
+  color: rgba(231,238,252,.65) !important;
+  margin-bottom:6px !important;
+}
+
+/* 3) Second row layout: keep tools compact, let CTA take remaining space */
+.formRow > div{ min-width: unset !important; }
+.formRow > div:not(:last-child){ flex:0 0 auto !important; }
+.formRow > div:last-child{
+  flex:1 1 320px !important;
+  min-width: 240px !important;
+}
+#addRoundBtn{ width:100% !important; }
+
+/* 4) Water: compact tool size */
+.stepper{
+  width:132px !important;
+  flex:0 0 132px !important;
+  height:44px !important;
+}
+.stepper button{
+  width:44px !important;
+  height:44px !important;
+  padding:0 !important;
+}
+#waterInput{
+  width:44px !important;
+  padding:0 !important;
+  text-align:center !important;
+}
+
+/* 5) Segmented: align height and make inactive darker */
+.segmented{
+  height:44px !important;
+  align-items:center !important;
+}
+.seg-btn{ opacity:.32 !important; }
+.seg-btn.is-active{ opacity:1 !important; }
+
+
+/* ===== v4: single-row flow ===== */
+.formRow{
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+}
+
+/* remove vertical label space in row */
+.formRow label{
+  margin-bottom:2px !important;
+  font-size:11px !important;
+}
+
+/* keep all controls inline */
+.formRow > div{
+  flex:0 0 auto !important;
+}
+
+/* water inline compact */
+.stepper{
+  width:120px !important;
+}
+
+/* CTA as sentence end */
+.formRow > div:last-child{
+  flex:1 1 auto !important;
+}
+#addRoundBtn{
+  width:100% !important;
+}
+
+
+/* ===== v5: refinements (water to 44px rectangle, widen key selects) ===== */
+
+/* Water: make it a true 44px rectangle like other inputs */
+.stepper{
+  padding:0 !important;
+  height:44px !important;
+  border-radius:14px !important;
+  width:160px !important;         /* v5: rectangle width */
+  flex:0 0 160px !important;
+}
+.stepper button{
+  width:44px !important;
+  height:44px !important;
+  border-radius:12px !important;
+}
+#waterInput{
+  width:72px !important;          /* give the number a bit more breathing room */
+  min-width:72px !important;
+  max-width:72px !important;
+  height:44px !important;
+}
+
+/* Key selects: prevent text/arrow overlap */
+#dealerSel, #winnerSel, #typeSel{
+  width:120px !important;
+  min-width:120px !important;
+  max-width:120px !important;
+  text-align:left !important;
+  text-align-last:left !important;
+  padding-left:18px !important;
+  padding-right:34px !important;
+}
+
+
+/* Since we removed 紅包欄位, keep second row strictly single-line */
+#youWhoWrap{ min-width:170px !important; }
+
+
+/* ===== v5.1: align with agreed visual ===== */
+
+/* Desktop: keep the form inputs on a single baseline without wrapping */
+@media (min-width: 980px){
+  .formRow{ flex-wrap:nowrap !important; }
+}
+
+/* Water stepper: ensure total height is 44 (include padding/border) */
+.stepper, .stepper button, #waterInput{
+  box-sizing:border-box !important;
+}
+.stepper{
+  padding:0 !important;
+  height:44px !important;
+  min-height:44px !important;
+  border-radius:14px !important;
+  width:150px !important;
+  flex:0 0 150px !important;
+  gap:0 !important;
+}
+.stepper button{
+  width:44px !important;
+  height:44px !important;
+  border-radius:12px !important;
+}
+#waterInput{
+  height:44px !important;
+  width:62px !important;
+  min-width:62px !important;
+  max-width:62px !important;
+}
+
+/* Read-only pill for 游金 */
+.pill{
+  transition: transform .12s ease, filter .12s ease;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:44px;
+  min-height:44px;
+  padding:0 16px;
+  border-radius:18px;
+  background:var(--surface2);
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:var(--shadow-pressed);
+  color:var(--text);
+  font-weight:700;
+  letter-spacing:.02em;
+  min-width:92px;
+}
+.pill.is-on{ filter:brightness(1.08); }
+
+
+/* ===== v5.2: tighten widths + hard-fix water stepper square issue ===== */
+.stepper-water{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  height:44px !important;
+  min-height:44px !important;
+  max-height:44px !important;
+  width:120px !important;
+  min-width:120px !important;
+  max-width:120px !important;
+  padding:0 !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  flex:0 0 auto !important;
+  align-self:center !important;
+}
+
+.stepper-water button{
+  width:30px !important;
+  height:44px !important;
+  padding:0 !important;
+  border-radius:10px !important;
+}
+.stepper-water #waterInput{
+  width:40px !important;
+  min-width:40px !important;
+  max-width:40px !important;
+  height:44px !important;
+  line-height:44px !important;
+  padding:0 !important;
+  text-align:center !important;
+}
+
+
+/* v5.6: center key selects */
+#dealerSel, #winnerSel, #typeSel{
+  width:100px !important;
+  min-width:100px !important;
+  text-align:center !important;
+  text-align-last:center !important;
+  padding-left:12px !important;
+  padding-right:30px !important;
+}
+
+
+/* v5.7: center text but visually offset left (compensate ▼ arrow) */
+#dealerSel, #winnerSel, #typeSel{
+  width:100px !important;
+  min-width:100px !important;
+  text-align:center !important;
+  text-align-last:center !important;
+  padding-left:12px !important;
+  padding-right:30px !important;
+}
+
+
+/* v5.11: micro interaction for record button */
+#addRoundBtn{
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+}
+#addRoundBtn:active{
+  transform: translateY(1px) scale(0.985);
+  box-shadow: 0 2px 8px rgba(0,0,0,.35) inset;
+}
+#addRoundBtn.success{
+  filter: brightness(1.08);
+}
+
+
+/* v5.12: desktop override - keep record button compact */
+@media (min-width: 900px){
+  #addRoundBtn{
+    width:80px !important;
+    min-width:80px !important;
+    max-width:80px !important;
+    flex:0 0 80px !important;
+  }
+}
+
+
+/* v5.13: lock record button shape (no square) */
+#addRoundBtn{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  height:44px !important;
+  min-height:44px !important;
+  max-height:44px !important;
+  white-space:nowrap !important;
+  align-self:center !important;
+}
+
+
+/* v5.15 FINAL: absolute CTA width override */
+.record-row button#addRoundBtn{
+  width:92px !important;
+  min-width:92px !important;
+  max-width:92px !important;
+  flex:0 0 92px !important;
+}
+
+
+
+
+.water-value{ flex:1; text-align:center; }
+
+/* v6.1: reduce empty space on the right by letting CTA grow */
+#addRoundBtn{
+  flex:1 1 auto !important;
+  width:auto !important;
+  min-width:180px !important;
+  max-width:320px !important;
+  height:44px !important;
+  min-height:44px !important;
+  max-height:44px !important;
+  white-space:nowrap !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+
+
+
+/* v6.2: CTA fills remaining space in the row (no empty right side) */
+.row.formRow{ align-items:flex-end; flex-wrap:nowrap; }
+.row.formRow > div{ flex:0 0 auto; }
+.row.formRow > div:last-child{ flex:1 1 auto; display:flex; }
+#addRoundBtn{
+  width:100% !important;
+  height:44px !important;
+  min-height:44px !important;
+  max-height:44px !important;
+  min-width:240px !important;
+  max-width:none !important;
+  white-space:nowrap !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+
+/* ===== v7.3: keep record icon INSIDE the row + flip pencil tip to LEFT ===== */
+
+/* Names label tight (keep your perfect left section) */
+#namesRow.namesGrid > div{ gap:4px !important; }
+#namesRow.namesGrid label{
+  margin-bottom:2px !important;
+  font-size:11px !important;
+  line-height:1.2 !important;
+}
+
+/* Main controls: fill more, but keep CTA in-row */
+#dealerSel, #winnerSel, #typeSel{
+  width:170px !important;
+  min-width:170px !important;
+  max-width:170px !important;
+}
+.stepper-water{
+  width:150px !important;
+  min-width:150px !important;
+  max-width:150px !important;
+}
+
+/* CRITICAL: stop the last column from taking 100% width (older v6.2 rules) */
+.row.formRow > div:last-child{
+  flex:0 0 auto !important;
+  display:flex !important;
+  margin-left:auto !important;  /* push icon to the far right, but stay inside */
+  min-width:auto !important;
+}
+
+/* Icon-only record button sizing */
+#addRoundBtn{
+  width:64px !important;
+  min-width:64px !important;
+  max-width:64px !important;
+  height:44px !important;
+  padding:0 !important;
+  flex:0 0 auto !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  white-space:nowrap !important;
+}
+#addRoundBtn svg{ display:block !important; }
+
+
+/* ===== v9: Mobile layout polish (<=520px) ===== */
+@media (max-width:520px){
+
+  /* Second card: allow wrapping into a clean grid */
+  .row.formRow{
+    flex-wrap:wrap !important;
+    gap:12px !important;
+    align-items:flex-end !important;
+  }
+
+  /* 2-column grid for controls */
+  .row.formRow > div{
+    flex:1 1 calc(50% - 12px) !important;
+    min-width:0 !important;
+  }
+
+  /* Make selects/stepper fill their cells */
+  #dealerSel, #winnerSel, #typeSel{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+  .stepper-water{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+
+  /* Record button: full-width last row (still icon-only) */
+  .row.formRow > div:last-child{
+    flex:1 1 100% !important;
+    margin-left:0 !important;
+  }
+  #addRoundBtn{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+
+  /* Optional: slightly larger tap target feel */
+  button, select, input{
+    height:46px !important;
+    line-height:46px !important;
+  }
+  .stepper-water button{
+    height:46px !important;
+  }
+  .stepper-water #waterInput{
+    height:46px !important;
+    line-height:46px !important;
+  }
+}
+
+
+/* ===== v10: Third column mobile-friendly round cards ===== */
+:root{
+  --youGold:#f5d24a;
+}
+.roundCard{
+  border:1px solid rgba(255,255,255,.08);
+}
+.roundCard.isYoujin{
+  border:2px solid var(--youGold);
+}
+.roundHeader{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+.roundDelBtn{
+  width:54px;
+  height:54px;
+  border-radius:16px;
+  border:2px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.92);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+}
+.roundDelBtn:active{ transform: scale(.98); }
+
+.roundTitle .rTop{
+  font-weight:700;
+  color: rgba(255,255,255,.55);
+  letter-spacing:.2px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.roundTitle .rTop .rIdx{ flex:0 0 auto; }
+.roundTitle .rTop .rDealer{
+  flex:0 1 auto;   /* don't grow; keep streak badge close */
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.roundTitle .rTop .streakMini{ flex:0 0 auto; }
+.roundTitle .rIdx{ margin-right:6px; color: rgba(255,255,255,.45); }
+.roundTitle .rMain{
+  margin-top:10px;
+  font-size:34px;
+  font-weight:900;
+  letter-spacing:.2px;
+  color: rgba(255,255,255,.96);
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px;
+}
+.roundTitle .rWinner{ font-weight:900; }
+.roundTitle .rSep{ opacity:.55; font-weight:800; }
+.roundTitle .rWater{ font-weight:900; }
+.roundTitle .rDot{ opacity:.55; }
+.roundTitle .rType{ font-weight:900; }
+.roundTitle .rWinnerOnly{
+  margin-top:10px;
+  display:flex;
+  flex-direction:column;   /* A first line, summary second line */
+  align-items:flex-start;
+  gap:10px;
+}
+
+.roundTitle .rWinner{
+  font-size:52px;
+  font-weight:900;
+  letter-spacing:.2px;
+  line-height:1;
+  color: rgba(255,255,255,.96);
+}
+
+.roundTitle .rSummary{
+  font-size:18px;
+  font-weight:850;
+  letter-spacing:.15px;
+  line-height:1.25;
+  color: rgba(231,238,252,.78);
+  max-width: 600px;
+  margin: 0 auto;
+  width:100%;
+}
+
+.roundTitle .rMeta{
+  margin-top:8px;
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:.2px;
+  color: rgba(255,255,255,.90);
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px;
+}
+
+.rMeta .youBadge{ margin-left:2px; } /* keep badge next to type */
+.roundTitle .rStar{ opacity:.55; font-weight:800; }
+
+.youBadge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 12px;
+  border-radius:999px;
+  border:2px solid rgba(245,210,74,.35);
+  background: rgba(245,210,74,.10);
+  color: rgba(255,255,255,.90);
+  font-size:16px;
+  font-weight:800;
+  margin-left:2px;
+}
+.youDot{
+  width:12px;
+  height:12px;
+  border-radius:999px;
+  background: var(--youGold);
+  box-shadow: 0 0 0 4px rgba(245,210,74,.18);
+}
+.roundTitle .rSub{
+  margin-top:14px;
+  font-size:22px;
+  font-weight:800;
+  color: rgba(255,255,255,.45);
+}
+
+/* Desktop keeps detailed lines visible */
+.roundLinesDesktop{ margin-top:14px; }
+
+/* Mobile tune: hide the old ultra-detailed lines; keep summary only */
+@media (max-width:520px){
+  .roundLinesDesktop{
+    display:none !important;
+  }
+  .roundCard{
+    padding:22px 22px !important;
+    border-radius:34px !important;
+  }
+}
+
+
+/* ===== v11 (fix): Mobile third column polish ===== */
+@media (max-width:520px){
+
+  /* Header layout: keep tools centered on the card's main axis */
+  .roundHeader{
+    align-items:center !important;
+  }
+  .roundTitle{
+    min-width:0 !important;
+  }
+
+  /* 1) Youjin badge -> octagon icon only (no text) */
+  .youBadge{
+    padding:0 !important;
+    width:30px !important;
+    height:30px !important;
+    border-radius:10px !important;
+    border:1px solid rgba(255, 210, 64, 0.35) !important;
+    background: rgba(255, 210, 64, 0.10) !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:0 !important;
+    font-size:0 !important; /* hide text width */
+    line-height:0 !important;
+    white-space:nowrap !important;
+    vertical-align:middle !important;
+  }
+  .youBadge .youDot{ display:none !important; }
+
+  .youBadge::before{
+    content:"";
+    width:18px;
+    height:18px;
+    display:block;
+    background:#FFD240;
+    clip-path: polygon(
+      30% 0%,
+      70% 0%,
+      100% 30%,
+      100% 70%,
+      70% 100%,
+      30% 100%,
+      0% 70%,
+      0% 30%
+    );
+  }
+
+  /* 2) Trash button bigger + centered */
+  .roundDelBtn{
+    width:56px !important;
+    height:56px !important;
+    border-radius:16px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    align-self:center !important;
+    flex:0 0 auto !important;
+  }
+  .roundDelBtn svg{
+    width:26px !important;
+    height:26px !important;
+  }
+}
+
+
+/* ===== v11.3: Youjin = octagon only (no pill) + bigger trash ===== */
+@media (max-width:520px){
+
+  /* Youjin: remove container visuals, keep only octagon */
+  .youBadge{
+    width:auto !important;
+    height:auto !important;
+    padding:0 !important;
+    border:none !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    border-radius:0 !important;
+    font-size:0 !important;
+    line-height:0 !important;
+  }
+  .youBadge span{ display:none !important; }
+  .youBadge .youDot{ display:none !important; }
+
+  .youBadge::before{
+    width:22px !important;
+    height:22px !important;
+    background:#FFD240 !important;
+  }
+
+  /* Trash: bigger button + bigger icon */
+  .roundDelBtn{
+    width:64px !important;
+    height:64px !important;
+    border-radius:18px !important;
+  }
+  .roundDelBtn svg{
+    width:30px !important;
+    height:30px !important;
+  }
+}
+
+
+/* ===== PATCH (B): no localStorage + centered trash (desktop & mobile) + youjin icon only ===== */
+
+/* Trash: always center icon, all breakpoints */
+.roundDelBtn{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:0 !important;
+  line-height:0 !important;
+}
+.roundDelBtn svg{
+  display:block !important;
+  margin:0 !important;
+}
+
+/* Youjin badge: octagon only (remove text) */
+.youBadge{
+  width:auto !important;
+  height:auto !important;
+  padding:0 !important;
+  border:none !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  font-size:0 !important;
+  line-height:0 !important;
+}
+.youBadge span,
+.youBadge .youDot{ display:none !important; }
+.youBadge::before{
+  content:"";
+  width:22px !important;
+  height:22px !important;
+  display:inline-block;
+  background:#FFD240 !important;
+  clip-path: polygon(
+    30% 0%,
+    70% 0%,
+    100% 30%,
+    100% 70%,
+    70% 100%,
+    30% 100%,
+    0% 70%,
+    0% 30%
+  );
+}
+
+
+/* ===== PATCH vB4: Trash center + bigger sizes (desktop & mobile) ===== */
+.roundDelBtn{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  align-self:center !important;
+  padding:0 !important;
+  margin:0 !important;
+  line-height:0 !important;
+
+  width:76px !important;   /* desktop a bit bigger */
+  height:76px !important;
+  border-radius:20px !important;
+}
+.roundDelBtn svg{
+  display:block !important;
+  width:36px !important;
+  height:36px !important;
+  margin:0 !important;
+}
+
+/* Mobile: make it bigger + keep perfectly centered */
+@media (max-width:520px){
+  .roundDelBtn{
+    width:88px !important;
+    height:88px !important;
+    border-radius:24px !important;
+  }
+  .roundDelBtn svg{
+    width:42px !important;
+    height:42px !important;
+  }
+}
+
+
+/* ===== PATCH vB5: Desktop header vertical centering (trash truly centered) ===== */
+.roundHeader{
+  align-items:center !important;  /* override older flex-start */
+}
+.roundTitle{
+  padding-top:0 !important;
+  padding-bottom:0 !important;
+}
+
+
+/* ===== PATCH vB7: Pin trash button absolute center (desktop+mobile) ===== */
+.roundHeader{
+  position:relative !important;
+  align-items:stretch !important; /* let title define height */
+}
+.roundDelBtn{
+  position:absolute !important;
+  right:0 !important;
+  top:50% !important;
+  transform: translateY(-50%) !important;
+
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+
+  padding:0 !important;
+  margin:0 !important;
+  line-height:0 !important;
+}
+
+/* keep icon dead-center */
+.roundDelBtn svg{ display:block !important; margin:0 !important; }
+
+/* sizing: desktop */
+.roundDelBtn{
+  width:76px !important;
+  height:76px !important;
+  border-radius:20px !important;
+}
+.roundDelBtn svg{
+  width:36px !important;
+  height:36px !important;
+}
+
+/* mobile sizing */
+@media (max-width:520px){
+  .roundDelBtn{
+    width:88px !important;
+    height:88px !important;
+    border-radius:24px !important;
+  }
+  .roundDelBtn svg{
+    width:42px !important;
+    height:42px !important;
+  }
+}
+
+
+/* ===== PATCH vB8: Center trash relative to WHOLE round card ===== */
+.roundCard{ position:relative !important; }
+.roundHeader{ position:static !important; } /* don't be positioning context */
+.roundDelBtn{
+  position:absolute !important;
+  right:24px !important;   /* a bit inset from card edge */
+  top:50% !important;      /* center within the entire card */
+  transform:translateY(-50%) !important;
+}
+@media (max-width:520px){
+  .roundDelBtn{ right:18px !important; }
+}
+
+
+/* ===== PATCH vB9: Mobile tune (trash smaller, thinner border, typography down) ===== */
+@media (max-width:520px){
+  /* Trash: a bit smaller + border thinner */
+  .roundDelBtn{
+    width:72px !important;
+    height:72px !important;
+    border-radius:22px !important;
+    border-width:0px !important; /* we'll set exact border below */
+  }
+  /* original border is 2px; make it 0 then reapply 0? better: set 1px */
+  .roundDelBtn{
+    border:1px solid rgba(255,255,255,.18) !important;
+  }
+  .roundDelBtn svg{
+    width:34px !important;
+    height:34px !important;
+  }
+
+  /* Main summary line: A - 0水 · 胡牌 (down 2 steps) */
+  .roundTitle .rMain{
+    font-size:28px !important;
+    gap:8px !important;
+  }
+
+  /* Sub line: 莊家xx/平家xx smaller */
+  .roundTitle .rSub{
+    font-size:16px !important;
+    margin-top:10px !important;
+  }
+}
+
+
+/* ===== PATCH vB10: Mobile tables keep first column visible ===== */
+@media (max-width:520px){
+  table{ table-layout:fixed !important; }
+  th,td{ overflow:hidden; text-overflow:ellipsis; }
+  th:first-child, td:first-child{
+    width:72px !important;
+    min-width:72px !important;
+    white-space:nowrap !important;
+  }
+}
+
+
+/* ===== PATCH vB11: iOS-ish interactions + youjin soft glow + mobile title spacing ===== */
+
+/* --- Trash button: subtle glow on hover/tap --- */
+.roundDelBtn{
+  transition: transform .12s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease, opacity .18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.roundDelBtn:hover{
+  background: rgba(255,255,255,.06) !important;
+  border-color: rgba(255,255,255,.24) !important;
+  box-shadow:
+    0 10px 22px rgba(0,0,0,.45),
+    0 0 0 1px rgba(255,255,255,.06) inset;
+}
+.roundDelBtn:active{
+  transform: scale(.96) !important;
+  background: rgba(255,255,255,.08) !important;
+  border-color: rgba(255,255,255,.28) !important;
+  box-shadow:
+    0 8px 18px rgba(0,0,0,.55),
+    0 0 0 1px rgba(255,255,255,.10) inset;
+}
+
+/* --- Youjin badge: soft outer glow --- */
+.youBadge::before{
+  box-shadow:
+    0 0 0 1px rgba(255,210,64,.25) inset,
+    0 6px 16px rgba(255,210,64,.20),
+    0 0 22px rgba(255,210,64,.16);
+}
+
+/* --- Youjin card: reduce hard border, use glow instead --- */
+.roundCard.isYoujin{
+  border-color: rgba(255,210,64,.55) !important;
+  box-shadow:
+    -10px -10px 22px rgba(255,255,255,.06),
+     10px  10px 22px rgba(0,0,0,.58),
+     0  0  0  1px rgba(255,210,64,.14) inset,
+     0  10px 26px rgba(255,210,64,.10),
+     0  0  34px rgba(255,210,64,.10);
+}
+
+/* --- Mobile: title line spacing more native --- */
+@media (max-width:520px){
+  .roundTitle .rMain{
+    line-height: 1.08 !important;
+    letter-spacing: .2px !important;
+  }
+  .roundTitle .rSub{
+    line-height: 1.15 !important;
+  }
+}
+
+
+/* ===== PATCH vB12: Mobile trash frame smaller (requested) ===== */
+@media (max-width:520px){
+  .roundDelBtn{
+    width:58px !important;
+    height:58px !important;
+    border-radius:16px !important;
+    border-width:1px !important;
+  }
+  .roundDelBtn svg{
+    width:28px !important;
+    height:28px !important;
+  }
+}
+
+
+/* ===== PATCH vB13: Winner line typography (bold name + lighter meta) + adaptive sizing + smart wrap + youjin tighten ===== */
+
+/* Base: separate emphasis */
+.rMain .rWinner{ font-weight:900; }
+.rMain .rSep,
+.rMain .rDot{ opacity:.55; }
+.rMain .rWater,
+.rMain .rType{ font-weight:750; opacity:.95; }
+
+/* Make layout wrap gracefully when name is long */
+.rMain{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:10px;
+}
+.rMain .rWinner{
+  min-width:0;        /* allow flex shrink */
+  flex:0 1 auto;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap; /* keep name in one line; if too long, ellipsis */
+}
+.rMain .rSep,
+.rMain .rWater,
+.rMain .rDot,
+.rMain .rType,
+.rMain .youBadge{
+  flex:0 0 auto;
+}
+
+/* If it wraps, keep second line a bit tighter */
+.rMain{ row-gap:8px; }
+
+/* Mobile: adaptive sizing + more native spacing */
+@media (max-width:520px){
+  .roundTitle .rMain{
+    font-size:clamp(24px, 6.2vw, 26px) !important; /* down a touch, adaptive */
+    line-height:1.10 !important;
+    letter-spacing:0.15px !important;
+    gap:8px !important;
+    row-gap:6px !important;
+  }
+
+  /* Meta slightly smaller than name */
+  .roundTitle .rMain .rWater,
+  .roundTitle .rMain .rType{
+    font-size:.92em !important;
+    font-weight:700 !important;
+  }
+
+  /* Dots/seps slightly smaller */
+  .roundTitle .rMain .rSep,
+  .roundTitle .rMain .rDot{
+    font-size:.90em !important;
+  }
+
+  /* Smart wrap: if name takes space, meta can go next line without feeling loose */
+  .roundTitle .rMain .rWinner{
+    max-width: 600px;
+  margin: 0 auto;
+  }
+
+  /* Sub info smaller + tighter */
+  .roundTitle .rSub{
+    font-size:15px !important;
+    line-height:1.12 !important;
+    margin-top:10px !important;
+  }
+}
+
+/* Youjin: tighten tracking a bit so it feels more “native” */
+.roundCard.isYoujin .rMain{
+  letter-spacing:0.05px;
+}
+
+
+/* ===== PATCH vB14: Auto adjust title tracking by winner name length ===== */
+.roundTitle .rMain{
+  letter-spacing: var(--titleTrack, 0.15px);
+}
+
+
+/* ===== PATCH vB15: mobile rMain smaller + trash frame smaller ===== */
+@media (max-width:520px){
+  .roundTitle .rMain{
+    font-size:clamp(22px, 5.8vw, 24px) !important; /* smaller by ~1 step */
+    line-height:1.08 !important;
+    gap:6px !important;
+    row-gap:6px !important;
+  }
+
+  /* Trash frame smaller */
+  .roundDelBtn{
+    width:54px !important;
+    height:54px !important;
+    border-radius:14px !important;
+    border:1px solid rgba(255,255,255,.14) !important;
+  }
+  .roundDelBtn svg{
+    width:26px !important;
+    height:26px !important;
+  }
+}
+
+
+/* ===== PATCH vB16: hide round detail lines (kept in DOM, not rendered) ===== */
+.roundLines{
+  display:none !important;
+}
+
+
+/* ===== PATCH vB17: Desktop tables - tighten last column & improve alignment ===== */
+#totalsArea table,
+#transfersArea table{
+  width:100%;
+  table-layout:fixed;
+}
+
+#totalsArea th:nth-child(1),
+#totalsArea td:nth-child(1){
+  width:200px;
+}
+#totalsArea th:nth-child(2),
+#totalsArea td:nth-child(2){
+  text-align:right;
+  width:220px;
+}
+
+#transfersArea th:nth-child(1),
+#transfersArea td:nth-child(1){
+  width:180px;
+}
+#transfersArea th:nth-child(2),
+#transfersArea td:nth-child(2){
+  width:60px;
+  text-align:center;
+}
+#transfersArea th:nth-child(3),
+#transfersArea td:nth-child(3){
+  width:auto;
+}
+#transfersArea th:nth-child(4),
+#transfersArea td:nth-child(4){
+  width:160px;
+  text-align:right;
+}
+
+#totalsArea td,
+#transfersArea td{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Keep mobile locked columns behavior; only apply tighter spacing on wider screens */
+@media (min-width:900px){
+  #totalsArea th, #totalsArea td,
+  #transfersArea th, #transfersArea td{
+    padding-top:16px;
+    padding-bottom:16px;
+  }
+}
+
+
+/* ===== FINAL: 玩家卡版面（桌機 4 / 手機 2x2） ===== */
+#namesRow.namesGrid{
+  display:grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap:14px !important;
+}
+@media (max-width:520px){
+  #namesRow.namesGrid{
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap:12px !important;
+  }
+}
+
+
+
+/* ===== FINAL v2: 總計改成玩家卡（桌機 4 / 手機 2x2），轉帳清單維持列表 ===== */
+.totalsGrid{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:14px;
+  margin-top:14px;
+}
+@media (max-width:520px){
+  .totalsGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); gap:12px; }
+}
+.playerTotalCard{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0)),
+    var(--surface);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:22px;
+  padding:16px 16px;
+  box-shadow: var(--shadow-small);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-width:0;
+}
+.playerTotalTop{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+}
+.playerName{
+  flex:1;
+  min-width:0;
+  font-weight:900;
+  font-size:16px;
+  letter-spacing:.2px;
+  overflow:hidden;
+  text-overflow:clip;
+  white-space:nowrap;
+}
+.playerAmt{
+  font-weight:900;
+  font-size:18px;
+  letter-spacing:.2px;
+  text-align:right;
+}
+.playerMeta{
+  color: rgba(231,238,252,.55);
+  font-size:12px;
+  line-height:1.35;
+}
+.playerAmt.pos{ color: rgba(61,220,132,.95); }
+.playerAmt.neg{ color: rgba(255,107,107,.95); }
+
+
+
+/* ===== vNext: 結算卡（贏家總覽 + 轉帳卡） ===== */
+.settleGrid{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:14px;
+  margin-top:14px;
+}
+@media (max-width:520px){
+  .settleGrid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+}
+
+/* Base card */
+.settleCard{
+  background:
+    radial-gradient(120% 160% at 20% 0%, rgba(255,255,255,.06), rgba(255,255,255,0) 55%),
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)),
+    var(--surface);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:22px;
+  padding:16px 18px;
+  box-shadow: var(--shadow-small);
+  min-width:0;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:10px;
+}
+
+/* Winner highlight */
+.settleCard.is-winner{
+  border-color: rgba(255,210,64,.45);
+  background:
+    radial-gradient(120% 160% at 20% 0%, rgba(255,210,64,.18), rgba(255,210,64,0) 60%),
+    linear-gradient(180deg, rgba(255,210,64,.12), rgba(255,255,255,0)),
+    var(--surface);
+  box-shadow:
+    -10px -10px 22px rgba(255,255,255,.06),
+     10px  10px 22px rgba(0,0,0,.58),
+     0  0  0  1px rgba(255,210,64,.14) inset,
+     0  10px 26px rgba(255,210,64,.10),
+     0  0  34px rgba(255,210,64,.10);
+}
+
+.settleTop{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+}
+.settleName{
+  font-weight:900;
+  letter-spacing:.2px;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+@media (max-width:520px){
+  .settleName{
+    /* 手機：名字可能很長，允許換行並自動縮字 */
+    white-space:normal;
+    line-height:1.1;
+    font-size: clamp(13px, 4.2vw, 18px);
+  }
+}
+@media (min-width:521px){
+  .settleName{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:18px;
+  }
+}
+.settleAmt{
+  font-weight:950;
+  font-size:22px;
+  letter-spacing:.2px;
+  text-align:right;
+}
+.settleAmt.pos{ color: rgba(61,220,132,.95); }
+.settleAmt.neg{ color: rgba(255,107,107,.95); }
+
+.settleMeta{
+  color: rgba(231,238,252,.55);
+  font-size:12px;
+  line-height:1.35;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:16px;
+}
+
+/* Small gold badge (for youjin amount) */
+.youjinMini{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,210,64,.26);
+  background: rgba(255,210,64,.08);
+  color: rgba(231,238,252,.85);
+  font-weight:800;
+}
+.youjinIcon{
+  width:14px;
+  height:14px;
+  display:inline-block;
+  background:#FFD240;
+  clip-path: polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%);
+  box-shadow:
+    0 0 0 1px rgba(255,210,64,.22) inset,
+    0 6px 14px rgba(255,210,64,.14);
+}
+
+/* Transfer card */
+.transferLine{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.transferLine.transferTo{ justify-content:flex-start; }
+.transferWho{
+  font-weight:900;
+  font-size:16px;
+  color: rgba(231,238,252,.88);
+  letter-spacing:.2px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.transferArrow{
+  opacity:.55;
+  font-weight:900;
+}
+.transferAmt{
+  font-weight:950;
+  font-size:22px;
+  letter-spacing:.2px;
+  color: rgba(255,107,107,.95);
+  text-align:right;
+}
+.transferSub{
+  color: rgba(231,238,252,.50);
+  font-size:12px;
+  line-height:1.35;
+}
+
+
+@media (max-width:520px){
+  .settleTop{ align-items:flex-start; }
+}
+
+
+/* ===== PATCH vC1: Reserve space so long winner names don't overlap trash button ===== */
+.roundTitle{ padding-right:120px !important; }
+@media (max-width:520px){
+  .roundTitle{ padding-right:108px !important; }
+}
+
+
+
+/* ===== Mobile Preview Mode (Desktop) ===== */
+/* Let mobile rules depend on container width so we can "preview" mobile on desktop */
+.app{ container-type:inline-size; }
+
+.appHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.appHeader h1{ margin:8px 0 6px; }
+
+.previewBtn{
+  height:40px !important;
+  min-height:40px !important;
+  line-height:40px !important;
+  border-radius:999px !important;
+  padding:0 14px !important;
+  font-size:13px !important;
+  font-weight:900 !important;
+  opacity:.85;
+  white-space:nowrap;
+}
+.previewBtn:hover{ filter:brightness(1.06); }
+.previewBtn:active{ transform: translateY(1px); }
+
+/* Hide the toggle on real phones (no need) */
+@media (max-width:520px){
+  .previewBtn{ display:none !important; }
+}
+
+/* Turn on "mobile width" on desktop */
+body.mobile-preview .app{
+  max-width:420px !important;
+}
+
+/* ===== Mobile rules as container queries (so desktop preview matches phone) ===== */
+@container (max-width:520px){
+      .card{ padding:20px; }
+      .namesHeader{
+        grid-template-columns:1fr;
+        gap:12px;
+        align-items:stretch;
+      }
+      #namesRow.namesGrid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:12px !important;
+      }
+      #resetBtn{ width:100%; justify-self:stretch; }
+    }
+
+@container (max-width:520px){
+
+  /* Second card: allow wrapping into a clean grid */
+  .row.formRow{
+    flex-wrap:wrap !important;
+    gap:12px !important;
+    align-items:flex-end !important;
+  }
+
+  /* 2-column grid for controls */
+  .row.formRow > div{
+    flex:1 1 calc(50% - 12px) !important;
+    min-width:0 !important;
+  }
+
+  /* Make selects/stepper fill their cells */
+  #dealerSel, #winnerSel, #typeSel{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+  .stepper-water{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+
+  /* Record button: full-width last row (still icon-only) */
+  .row.formRow > div:last-child{
+    flex:1 1 100% !important;
+    margin-left:0 !important;
+  }
+  #addRoundBtn{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+
+  /* Optional: slightly larger tap target feel */
+  button, select, input{
+    height:46px !important;
+    line-height:46px !important;
+  }
+  .stepper-water button{
+    height:46px !important;
+  }
+  .stepper-water #waterInput{
+    height:46px !important;
+    line-height:46px !important;
+  }
+}
+
+@container (max-width:520px){
+  .roundLinesDesktop{
+    display:none !important;
+  }
+  .roundCard{
+    padding:22px 22px !important;
+    border-radius:34px !important;
+  }
+}
+
+@container (max-width:520px){
+
+  /* Header layout: keep tools centered on the card's main axis */
+  .roundHeader{
+    align-items:center !important;
+  }
+  .roundTitle{
+    min-width:0 !important;
+  }
+
+  /* 1) Youjin badge -> octagon icon only (no text) */
+  .youBadge{
+    padding:0 !important;
+    width:30px !important;
+    height:30px !important;
+    border-radius:10px !important;
+    border:1px solid rgba(255, 210, 64, 0.35) !important;
+    background: rgba(255, 210, 64, 0.10) !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:0 !important;
+    font-size:0 !important; /* hide text width */
+    line-height:0 !important;
+    white-space:nowrap !important;
+    vertical-align:middle !important;
+  }
+  .youBadge .youDot{ display:none !important; }
+
+  .youBadge::before{
+    content:"";
+    width:18px;
+    height:18px;
+    display:block;
+    background:#FFD240;
+    clip-path: polygon(
+      30% 0%,
+      70% 0%,
+      100% 30%,
+      100% 70%,
+      70% 100%,
+      30% 100%,
+      0% 70%,
+      0% 30%
+    );
+  }
+
+  /* 2) Trash button bigger + centered */
+  .roundDelBtn{
+    width:56px !important;
+    height:56px !important;
+    border-radius:16px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    align-self:center !important;
+    flex:0 0 auto !important;
+  }
+  .roundDelBtn svg{
+    width:26px !important;
+    height:26px !important;
+  }
+}
+
+@container (max-width:520px){
+
+  /* Youjin: remove container visuals, keep only octagon */
+  .youBadge{
+    width:auto !important;
+    height:auto !important;
+    padding:0 !important;
+    border:none !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    border-radius:0 !important;
+    font-size:0 !important;
+    line-height:0 !important;
+  }
+  .youBadge span{ display:none !important; }
+  .youBadge .youDot{ display:none !important; }
+
+  .youBadge::before{
+    width:22px !important;
+    height:22px !important;
+    background:#FFD240 !important;
+  }
+
+  /* Trash: bigger button + bigger icon */
+  .roundDelBtn{
+    width:64px !important;
+    height:64px !important;
+    border-radius:18px !important;
+  }
+  .roundDelBtn svg{
+    width:30px !important;
+    height:30px !important;
+  }
+}
+
+@container (max-width:520px){
+  .roundDelBtn{
+    width:88px !important;
+    height:88px !important;
+    border-radius:24px !important;
+  }
+  .roundDelBtn svg{
+    width:42px !important;
+    height:42px !important;
+  }
+}
+
+@container (max-width:520px){
+  .roundDelBtn{
+    width:88px !important;
+    height:88px !important;
+    border-radius:24px !important;
+  }
+  .roundDelBtn svg{
+    width:42px !important;
+    height:42px !important;
+  }
+}
+
+@container (max-width:520px){
+  .roundDelBtn{ right:18px !important; }
+}
+
+@container (max-width:520px){
+  /* Trash: a bit smaller + border thinner */
+  .roundDelBtn{
+    width:72px !important;
+    height:72px !important;
+    border-radius:22px !important;
+    border-width:0px !important; /* we'll set exact border below */
+  }
+  /* original border is 2px; make it 0 then reapply 0? better: set 1px */
+  .roundDelBtn{
+    border:1px solid rgba(255,255,255,.18) !important;
+  }
+  .roundDelBtn svg{
+    width:34px !important;
+    height:34px !important;
+  }
+
+  /* Main summary line: A - 0水 · 胡牌 (down 2 steps) */
+  .roundTitle .rMain{
+    font-size:28px !important;
+    gap:8px !important;
+  }
+
+  /* Sub line: 莊家xx/平家xx smaller */
+  .roundTitle .rSub{
+    font-size:16px !important;
+    margin-top:10px !important;
+  }
+}
+
+@container (max-width:520px){
+  table{ table-layout:fixed !important; }
+  th,td{ overflow:hidden; text-overflow:ellipsis; }
+  th:first-child, td:first-child{
+    width:72px !important;
+    min-width:72px !important;
+    white-space:nowrap !important;
+  }
+}
+
+@container (max-width:520px){
+  .roundTitle .rMain{
+    line-height: 1.08 !important;
+    letter-spacing: .2px !important;
+  }
+  .roundTitle .rSub{
+    line-height: 1.15 !important;
+  }
+}
+
+@container (max-width:520px){
+  .roundDelBtn{
+    width:58px !important;
+    height:58px !important;
+    border-radius:16px !important;
+    border-width:1px !important;
+  }
+  .roundDelBtn svg{
+    width:28px !important;
+    height:28px !important;
+  }
+}
+
+@container (max-width:520px){
+  .roundTitle .rMain{
+    font-size:clamp(24px, 6.2vw, 26px) !important; /* down a touch, adaptive */
+    line-height:1.10 !important;
+    letter-spacing:0.15px !important;
+    gap:8px !important;
+    row-gap:6px !important;
+  }
+
+  /* Meta slightly smaller than name */
+  .roundTitle .rMain .rWater,
+  .roundTitle .rMain .rType{
+    font-size:.92em !important;
+    font-weight:700 !important;
+  }
+
+  /* Dots/seps slightly smaller */
+  .roundTitle .rMain .rSep,
+  .roundTitle .rMain .rDot{
+    font-size:.90em !important;
+  }
+
+  /* Smart wrap: if name takes space, meta can go next line without feeling loose */
+  .roundTitle .rMain .rWinner{
+    max-width: 600px;
+  margin: 0 auto;
+  }
+
+  /* Sub info smaller + tighter */
+  .roundTitle .rSub{
+    font-size:15px !important;
+    line-height:1.12 !important;
+    margin-top:10px !important;
+  }
+}
+
+@container (max-width:520px){
+  .roundTitle .rMain{
+    font-size:clamp(22px, 5.8vw, 24px) !important; /* smaller by ~1 step */
+    line-height:1.08 !important;
+    gap:6px !important;
+    row-gap:6px !important;
+  }
+
+  /* Trash frame smaller */
+  .roundDelBtn{
+    width:54px !important;
+    height:54px !important;
+    border-radius:14px !important;
+    border:1px solid rgba(255,255,255,.14) !important;
+  }
+  .roundDelBtn svg{
+    width:26px !important;
+    height:26px !important;
+  }
+}
+
+@container (max-width:520px){
+  #namesRow.namesGrid{
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap:12px !important;
+  }
+}
+
+@container (max-width:520px){
+  .totalsGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); gap:12px; }
+}
+
+@container (max-width:520px){
+  .settleGrid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+}
+
+@container (max-width:520px){
+  .settleName{
+    /* 手機：名字可能很長，允許換行並自動縮字 */
+    white-space:normal;
+    line-height:1.1;
+    font-size: clamp(13px, 4.2vw, 18px);
+  }
+}
+
+@container (max-width:520px){
+  .settleTop{ align-items:flex-start; }
+}
+
+@container (max-width:520px){
+  .roundTitle{ padding-right:108px !important; }
+}
+
+
+
+/* ===== vUI-20251229: only 3 tweaks =====
+   1) 連莊膠囊改金色 + 放到紀錄卡右上（狀態列右側）
+   2) 取消游金 badge，改灰階 meta tag（不跟連莊膠囊搶）
+   3) 垃圾桶移到紀錄卡右下角 + 縮小兩個 size
+*/
+
+/* 1) rTop: left info + right streak */
+.roundTitle{ padding-right:0 !important; } /* no longer reserving space for trash */
+.roundTitle .rTop{
+  justify-content:space-between;
+  gap:10px;
+}
+.roundTitle .rTopLeft{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  flex:1 1 auto;
+}
+.roundTitle .rTopRight{
+  display:flex;
+  align-items:center;
+  flex:0 0 auto;
+}
+.roundTitle .rTopRight .streakMini{ margin-left:0 !important; }
+
+/* 1) streak mini -> gold */
+.streakMini{
+  background: rgba(245,210,74,.12) !important;
+  color: rgba(255,255,255,.92) !important;
+  border:1px solid rgba(245,210,74,.28) !important;
+  box-shadow: 0 0 0 4px rgba(245,210,74,.08) !important;
+}
+
+/* 2) grey meta tag */
+.metaTag{
+  display:inline-flex;
+  align-items:center;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.15px;
+  line-height:1.6;
+  color: rgba(231,238,252,.52);
+  background: rgba(231,238,252,.06);
+  border:none;
+}
+.roundTitle .rMeta .metaTag{ margin-left:2px; }
+
+/* 3) trash -> bottom-right (layout row) + smaller */
+.roundActions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:14px;
+}
+.roundDelBtn{
+  position:static !important;
+  inset:auto !important;
+  transform:none !important;
+  width:56px !important;
+  height:56px !important;
+  border-radius:16px !important;
+}
+.roundDelBtn svg{
+  width:26px !important;
+  height:26px !important;
+}
+
+/* mobile: down 2 sizes */
+@container (max-width:520px){
+  .roundActions{ margin-top:12px; }
+  .roundDelBtn{
+    width:48px !important;
+    height:48px !important;
+    border-radius:14px !important;
+  }
+  .roundDelBtn svg{
+    width:22px !important;
+    height:22px !important;
+  }
+}
+
+
+
+/* ===== v11: Round card polish (B+C+D) ===== */
+/* C) Reduce “heavy inset” feel: flatter surface, tighter radius */
+.roundCard{
+  background:
+    radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.05), rgba(255,255,255,0) 60%),
+    var(--surface2) !important;
+  border:1px solid rgba(255,255,255,.07) !important;
+  box-shadow: var(--shadow-small) !important;
+  padding:20px 20px !important;
+  border-radius:26px !important;
+}
+.roundCard.isYoujin{
+  border:1px solid rgba(245,210,74,.38) !important;
+}
+@media (max-width:520px){
+  .roundCard{
+    padding:20px 20px !important;
+    border-radius:26px !important;
+  }
+}
+
+/* D) Header row: #1 + dealer meta (left), status tags (right) */
+.roundTitle .rTop.rTop--header{
+  font-weight:800;
+  color: rgba(255,255,255,.60);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+.roundTitle .rTopLeft{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.roundTitle .rIdxPill{
+  flex:0 0 auto;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.2px;
+  color: rgba(231,238,252,.58);
+  background: rgba(231,238,252,.05); /* subtle fill, no outline */
+  border:none;
+  box-shadow:none;
+}
+.roundTitle .rDealer{
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.roundTitle .rTopRight{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+.roundTitle .rTopRight .metaTag{
+  margin-left:0 !important;
+}
+.metaTag--youjin{
+  opacity:.9;
+}
+
+/* B) Meta -> chips (water / type / score) */
+.roundTitle .rMeta.rChips{
+  margin-top:14px !important;
+  font-size:14px !important;
+  font-weight:800 !important;
+  color: rgba(255,255,255,.86) !important;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.rChips .chip{
+  display:inline-flex;
+  align-items:center;
+  padding:7px 12px;
+  border-radius:999px;
+  font-size:14px;
+  font-weight:850;
+  letter-spacing:.15px;
+  line-height:1.25;
+  color: rgba(255,255,255,.86);
+  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.10);
+}
+.rChips .chip--sub{
+  color: rgba(231,238,252,.66);
+  border-color: rgba(231,238,252,.12);
+  background: rgba(231,238,252,.05);
+}
+
+@container (max-width:520px){
+  .roundTitle .rTop.rTop--header{ margin-bottom: 8px; }
+  .roundTitle .rDealer{ font-size:13px; }
+  .roundTitle .rWinner{ font-size:44px; }
+  .roundTitle .rSummary{ font-size:16px; }
+  .roundTitle .rMeta.rChips{ margin-top:12px !important; }
+  .rChips .chip{ font-size:13px; padding:6px 11px; }
+}
+
+/* ===== v6: cleaner round record card ===== */
+.rIdxPill{
+  padding:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  color: rgba(231,238,252,.45) !important;
+}
+
+.rWinnerOnly{
+  display:grid !important;
+  grid-template-columns: 1fr auto !important;
+  grid-template-rows: auto auto !important;
+  column-gap:16px !important;
+  row-gap:10px !important;
+  align-items:start !important;
+}
+
+.rWinnerOnly .rWinner{ grid-column:1; grid-row:1; }
+.rWinnerOnly .rSummary{ grid-column:1; grid-row:2; }
+
+.rWinnerOnly .roundActions{
+  grid-column:2;
+  grid-row:1 / span 2;
+  align-self:end;
+  justify-self:end;
+  margin-top:0 !important;
+  display:flex !important;
+}
+
+.roundActions{ margin-top:0 !important; }
+
+.roundDelBtn{
+  opacity:.9;
+}
+.roundCard:hover .roundDelBtn{ opacity:1; }
+
+/* tighten vertical rhythm a touch */
+.rWinnerOnly{ margin-top:8px !important; }
+
+
+
+/* ===== PATCH v6.2: Winner name sizing (short names big, long names contained) ===== */
+/* vC1 reserved padding-right was for the old "floating trash" layout; v6 uses a grid so remove it */
+.roundTitle{ padding-right:0 !important; }
+
+/* Winner name: capped, 2-line clamp, and auto-sized via JS vars */
+.rWinnerOnly .rWinner{
+  font-size: clamp(24px, var(--winnerFs, 34px), 42px);
+  line-height:1.02;
+  letter-spacing:0.10px;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:normal;
+  word-break:break-word;
+}
+
+@container (max-width:520px){
+  .rWinnerOnly .rWinner{
+    font-size: clamp(20px, var(--winnerFsM, 28px), 36px);
+    letter-spacing:0.05px;
+  }
+}
+
+
+
+/* ===== THEME vNeonFrost: dark + warm neon + frosted (strong) =====
+   目標：背景帶橘紅霓虹氛圍；卡片更霧、更乾淨；彩色只“明顯”出現在連莊
+*/
+
+/* Warm neon background */
+:root{
+  --bg:#07080c;
+  --text:#f1f4fb;
+  --muted:rgba(241,244,251,.62);
+  --stroke:rgba(255,255,255,.10);
+  --tableLine:rgba(255,255,255,.08);
+}
+
+html{
+  background:
+        radial-gradient(900px 420px at 50% 0%, rgba(255, 110, 60, .18), transparent 62%),
+radial-gradient(1100px 720px at 86% 18%, rgba(255, 76, 45, .22), transparent 58%),
+    radial-gradient(980px 680px at 18% 88%, rgba(255, 170, 55, .14), transparent 60%),
+    radial-gradient(760px 520px at 12% 16%, rgba(255, 115, 55, .10), transparent 56%),
+    radial-gradient(1200px 900px at 50% 50%, rgba(255,255,255,.02), transparent 55%),
+    linear-gradient(180deg, rgba(0,0,0,.68), rgba(0,0,0,.80)),
+    var(--bg);
+
+}
+
+/* Paint neon background on both html + body (iOS status bar area sometimes uses body bg) */
+html, body{
+  background:
+        radial-gradient(900px 420px at 50% 0%, rgba(255, 110, 60, .18), transparent 62%),
+radial-gradient(1100px 720px at 86% 18%, rgba(255, 76, 45, .22), transparent 58%),
+    radial-gradient(980px 680px at 18% 88%, rgba(255, 170, 55, .14), transparent 60%),
+    radial-gradient(760px 520px at 12% 16%, rgba(255, 115, 55, .10), transparent 56%),
+    radial-gradient(1200px 900px at 50% 50%, rgba(255,255,255,.02), transparent 55%),
+    linear-gradient(180deg, rgba(0,0,0,.68), rgba(0,0,0,.80)),
+    var(--bg);
+
+}
+/* Disable legacy fixed bg layer so it doesn't fight root backgrounds */
+body::before{
+  background: none !important;
+}
+
+
+/* Use html background so it reaches iOS safe areas (status bar / notch) */
+body::before{ background:none !important; }
+body::after{ opacity:0 !important; }
+
+/* Subtle grain for “frost” feel */
+html::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  opacity:.07;
+  mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'>\
+<filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter>\
+<rect width='140' height='140' filter='url(%23n)' opacity='.55'/>\
+</svg>");
+}
+
+/* Frosted glass cards (strong) */
+.card{
+  background: rgba(18, 18, 24, .60) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  border:1px solid rgba(255,255,255,.12) !important;
+  box-shadow: 0 18px 60px rgba(0,0,0,.55) !important;
+}
+
+.roundCard{
+  background: rgba(18, 18, 24, .56) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  border:1px solid rgba(255,255,255,.11) !important;
+  box-shadow: 0 16px 46px rgba(0,0,0,.48) !important;
+}
+
+/* Remove “gold border” for youjin round card — keep grey, let streak be the hero */
+.roundCard.isYoujin{
+  border:1px solid rgba(255,255,255,.12) !important;
+}
+
+/* Inputs / selects / segmented: cleaner, less neomorphic */
+input,select{
+  background: rgba(12, 12, 16, .55) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  border:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:none !important;
+}
+
+/* Water input stays clean inside stepper */
+#waterInput{
+  background: transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+.stepper,
+.segmented{
+  background: rgba(12, 12, 16, .48) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  border:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:none !important;
+}
+
+.stepper button{
+  background: rgba(255,255,255,.05) !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:none !important;
+}
+
+button{
+  background: rgba(255,255,255,.06) !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:none !important;
+}
+
+button:hover{ filter:brightness(1.05); }
+button:active{
+  transform: translateY(1px);
+  background: rgba(255,255,255,.05) !important;
+}
+
+/* CTA button: neutral (avoid blue accent); streak remains the only obvious color */
+#addRoundBtn{
+  background: rgba(255,255,255,.08) !important;
+  border-color: rgba(255,255,255,.18) !important;
+}
+
+/* Make any leftover “badge” neutral grey (in case legacy rendering still outputs it) */
+.badge{
+  background: rgba(255,255,255,.06) !important;
+  color: rgba(241,244,251,.68) !important;
+  border:none !important;
+  box-shadow:none !important;
+}
+
+/* Table hover slightly softer */
+tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
+
+/* Keep meta tags quiet */
+.metaTag{
+  background: rgba(255,255,255,.06) !important;
+  color: rgba(241,244,251,.55) !important;
+}
+
+/* Streak pill: keep gold but reduce the “ring” so it feels like premium neon */
+.streakMini{
+  box-shadow: 0 0 0 3px rgba(245,210,74,.08) !important;
+}
+
+/* In this theme, “danger” red is only for warnings, not used elsewhere */
+.warn{ color: rgba(255, 120, 95, .95) !important; }
+
+
+
+
+/* ===== Seat-map (玩家/莊) ===== */
+.seatWrap{ position:relative; }
+
+.seatBoard{
+  /* seat sizing tokens (fit within the board's inner width) */
+  --tokenSize: 70px;
+  --seatGap: 16px;
+  /* seat cards will shrink-to-fit on small screens, but won't grow endlessly */
+  --seatMaxW: 220px;
+  --seatH: clamp(80px, 18vw, 118px);
+
+  position:relative;
+  /* no inner "blue frame" — let the outer .card provide the container */
+  padding:0 0 56px;
+  overflow:visible;
+}
+
+.seatBoardTitle{
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:.2px;
+  margin:0 0 14px;
+}
+
+/* Use a simple 3x3 grid (like a seat map) and overlay the dealer chip at center */
+.seatGrid{
+  position:relative;
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  width:100%;
+  column-gap: var(--seatGap);
+  row-gap: var(--seatGap);
+  align-items:center;
+  justify-items:center;
+  padding: 6px 0;
+}
+
+.seatCard{
+  position:relative;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.10);
+  background: var(--surface2);
+  box-shadow: var(--shadow-pressed);
+  width: 100%;
+  max-width: var(--seatMaxW);
+  height: var(--seatH);
+  padding:12px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+  user-select:none;
+  min-height:unset;
+}
+.seatCard:active{ transform: translateY(1px); }
+
+.seatCard .seatName{
+  font-weight:800;
+  letter-spacing:.15px;
+  font-size: clamp(14px, 3.2vw, 16px);  /* smaller for mobile */
+  line-height: 1.14;
+  color: rgba(241,244,251,.98);
+  text-align:center;
+  white-space:normal;
+  word-break:break-all;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.seatTop{ grid-column:2; grid-row:1; justify-self:center; }
+.seatLeft{ grid-column:1; grid-row:2; justify-self:center; }
+.seatRight{ grid-column:3; grid-row:2; justify-self:center; }
+.seatBottom{ grid-column:2; grid-row:3; justify-self:center; }
+
+@media (max-width:520px){
+  .seatBoard{
+    padding:14px 14px 54px;
+    --tokenSize: 62px;
+    --seatGap: 14px;
+    --seatMaxW: 200px;
+    --seatH: clamp(78px, 22vw, 108px);
+  }
+  .seatCard{ border-radius:20px; }
+  .seatCard .seatName{ font-size:22px; } /* -2 sizes */
+}
+
+.seatBadgeSlot{
+  position:absolute;
+  top:10px;
+  right:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.seatCenter{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform: translate(-50%,-50%);
+  width:var(--tokenSize);
+  height:var(--tokenSize);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.dealerChip{
+  width:46px;
+  height:46px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  font-size:18px;
+  letter-spacing:.2px;
+  color: rgba(255,243,236,.98);
+  background: linear-gradient(180deg, rgba(255,152,120,.34), rgba(255,96,78,.14));
+  border:1px solid rgba(255,166,138,.52);
+  box-shadow: 0 14px 26px rgba(0,0,0,.38), 0 0 0 3px rgba(255,118,92,.10);
+  cursor:grab;
+  touch-action:none;
+}
+.dealerChip:active{ cursor:grabbing; }
+.dealerChip.is-docked{ width:34px; height:34px; font-size:15px; }
+.dealerChip.is-dragging{ cursor:grabbing; filter: drop-shadow(0 14px 20px rgba(0,0,0,.45)); }
+
+/* Drop-zone affordance (when 尚未設莊) */
+.seatCard.is-dropZone{ border-color: rgba(255,166,138,.22); }
+.seatCard.is-dropTarget{ border-color: rgba(255,166,138,.62); box-shadow: 0 0 0 3px rgba(255,118,92,.12), var(--shadow-pressed); }
+
+/* Swap button (small rotate icon + tiny label at bottom-right) */
+.swapBtn{
+  position:absolute;
+  right:16px;
+  bottom:14px;
+  height:34px;
+  min-height:34px !important;
+  padding:0 10px;
+  border-radius:999px;
+  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:none !important;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:auto !important;
+}
+.swapBtn svg{ opacity:.88; display:block; }
+
+#resetBtn.swapBtn{
+  left:50%;
+  right:auto;
+  transform: translateX(-50%);
+}
+#resetBtn.swapBtn:active{
+  transform: translateX(-50%) translateY(1px);
+}
+.swapBtn:active{ background: rgba(255,255,255,.035) !important; transform: translateY(1px); }
+.swapLabel{ font-size:11px; letter-spacing:.2px; color: rgba(241,244,251,.42); }
+
+
+/* Soft guidance pulse */
+.dealerChip.is-pulse{
+  animation: chipPulse .9s ease-in-out 1;
+}
+@keyframes chipPulse{
+  0%{ transform: scale(1); box-shadow: 0 0 0 0 rgba(255,120,80,.0); }
+  35%{ transform: scale(1.04); box-shadow: 0 0 0 10px rgba(255,120,80,.16); }
+  70%{ transform: scale(1.01); box-shadow: 0 0 0 18px rgba(255,120,80,.0); }
+  100%{ transform: scale(1); box-shadow: 0 0 0 0 rgba(255,120,80,.0); }
+}
+
+
+/* Name modal */
+.nameModal{ position:fixed; inset:0; z-index:9999; display:none; }
+.nameModal.is-open{ display:block; }
+.nameModalOverlay{ position:absolute; inset:0; background: rgba(0,0,0,.48); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.nameModalCard{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform: translate(-50%,-50%);
+  width:min(420px, calc(100vw - 36px));
+  border-radius:26px;
+  border:1px solid rgba(255,255,255,.14);
+  background:
+    radial-gradient(120% 160% at 22% 0%, rgba(255,255,255,.06), rgba(255,255,255,0) 60%),
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)),
+    var(--surface);
+  box-shadow: 0 26px 70px rgba(0,0,0,.55);
+  padding:18px;
+}
+.nameModalTitle{ font-weight:900; font-size:16px; margin-bottom:12px; }
+.nameModalInput{
+  width:100%;
+  border-radius:18px;
+  padding:14px 14px;
+  background: var(--surface2);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow: var(--shadow-pressed);
+  color: rgba(241,244,251,.96);
+  font-size:16px;
+  outline:none;
+}
+.nameModalActions{ display:flex; justify-content:flex-end; gap:10px; margin-top:14px; }
+.nameModalBtn{ height:44px; padding:0 14px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); box-shadow: var(--shadow-small); }
+.nameModalBtn:active{ box-shadow: var(--shadow-pressed); transform: translateY(1px); }
+.nameModalBtn.primary{ background: rgba(255,118,92,.16); border-color: rgba(255,166,138,.36); }
+
+
+
+
+/* ===== Player setup (2x2 cards) ===== */
+.playerGrid{
+  position:relative;
+  display:grid;
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+  /* tighter spacing so 2x2 stays rectangular on small screens */
+  gap: 12px 12px;
+  padding: 12px 6px 0;
+  width:100%;
+  box-sizing:border-box;
+  max-width: 520px;
+  margin: 0 auto;
+  overflow:hidden;
+}
+.playerCard{
+  position:relative;
+  min-width:0;
+  /* keep cards wide (not square) across phone sizes */
+  height: clamp(84px, 17.5vw, 108px) !important;
+  min-height: clamp(84px, 17.5vw, 108px) !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  box-shadow: none !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  touch-action: manipulation;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.playerCard:active,
+.playerCard.is-pressing{
+  transform: scale(.99);
+  filter: brightness(.98);
+  background: transparent !important;
+}
+
+.playerMain{
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: .5px;
+  color: rgba(255,255,255,.95);
+  text-shadow: 0 2px 0 rgba(0,0,0,.35);
+  line-height: 1.12;
+  padding: 0 18px;
+  text-align: center;
+  width: 100%;
+  min-width: 0;
+  max-width: 600px;
+  margin: 0 auto;
+
+  /* allow wrapping instead of "..." */
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  transition: transform .18s ease;
+}
+
+.playerHint{
+  position:absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(255,255,255,.22);
+  opacity: 0;
+  transition: opacity .18s ease;
+  pointer-events:none;
+  white-space: nowrap;
+}
+.playerGrid.needPickDealer .playerHint{ opacity: 1; }
+.playerGrid.needPickDealer .playerMain{ transform: translateY(-10px); }
+/* Inline name editing (no modal) */
+.playerCard.is-editing{ box-shadow: none !important; border-color: rgba(255,255,255,.14) !important; }
+.playerCard.is-editing .playerHint{ opacity: 0 !important; }
+
+.inlineNameInput{
+  width: 100% !important;
+  max-width: 100% !important;
+  text-align: center !important;
+
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+
+  color: rgba(255,255,255,.95) !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  letter-spacing: .5px !important;
+  line-height: 1.05 !important;
+  padding: 0 18px !important;
+  margin: 0 !important;
+
+  -webkit-appearance: none;
+  appearance: none;
+  caret-color: rgba(255,255,255,.85);
+}
+.inlineNameInput::placeholder{ color: rgba(255,255,255,.22); }
+
+.playerCard.isDealer{
+  border-color: rgba(245,210,74,.28) !important;
+  box-shadow: 0 0 0 2px rgba(245,210,74,.18) inset !important;
+}
+
+.playerCard.isDealer::after{
+  content:"";
+  position:absolute;
+  top: 18px;
+  right: 18px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%,
+    rgba(255,255,255,.95),
+    rgba(245,210,74,.98) 38%,
+    rgba(245,210,74,.82) 66%,
+    rgba(245,210,74,.25) 100%
+  );
+  box-shadow: 0 0 0 2px rgba(245,210,74,.18);
+}
+
+/* Center the reset button under the 2x2 grid */
+.seatWrap{ position:relative; }
+.swapBtn{
+  left: 50%;
+  right: auto;
+  bottom: 16px;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,.04) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  box-shadow: none !important;
+  padding: 10px 16px;
+  height: auto;
+  min-height: 0 !important;
+  gap: 10px;
+  color: rgba(255,255,255,.45);
+}
+
+.swapBtn:hover{
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.12);
+}
+.swapBtn svg path{ fill: currentColor !important; }
+.swapLabel{ font-size: 22px; font-weight: 900; letter-spacing: .2px; }
+
+
+
+/* v5: compact + wider-feel player setup */
+.cardPlayerSetup{ padding: 16px 14px 14px; }
+#namesRow.seatBoard{ padding: 0 !important; }
+.cardPlayerSetup .playerGrid{ padding-left: 4px; padding-right: 4px; }
+.cardPlayerSetup .swapBtn{
+  position: static !important;
+  left:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform: none !important;
+  margin: 14px auto 4px !important;
+  display:flex !important;          /* block-level so margin:auto centers */
+  width: fit-content !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  align-items:center;
+  justify-content:center;
+}
+.cardPlayerSetup .swapBtn:active{
+  transform: translateY(1px) !important;
+}
+
+.cardPlayerSetup .swapLabel{ font-size: 18px; }
+
+
+
+/* ===== Figma Form (Winner + Type/Water/Record) ===== */
+.cardFormFigma{ padding:0 !important; }
+.cardFormFigma .figmaForm{
+  width:354px;
+  margin:0 auto;
+  padding:16px 22px 20px 20px;
+}
+.cardFormFigma .figLabel{
+  width:100%;
+  font-size:12px !important;
+  line-height:14px !important;
+  font-weight:600 !important; /* semibold */
+  text-align:center !important;
+  margin:0 0 4px 0 !important;
+  color:rgba(231,238,252,.85);
+}
+.cardFormFigma .figLabelEmpty{ visibility:hidden; }
+
+.cardFormFigma .winnerGroup{
+  width:312px;
+  margin:0 0 16px 0;
+}
+.cardFormFigma .winnerGroup .figLabel{ width:312px; }
+
+.cardFormFigma select.figWinner{
+  width:312px !important;
+  height:45px !important;
+  min-height:45px !important;
+  border-radius:12px !important;
+  background:var(--surface2) !important;
+  border:0 !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), var(--shadow-pressed) !important;
+  padding:15px 0 16px 0 !important; /* center 16/14/15-ish */
+  font-size:16px !important;
+  font-weight:900 !important; /* black */
+  line-height:14px !important;
+  color:var(--text) !important;
+  text-align:center !important;
+  text-align-last:center !important;
+  -webkit-appearance:none !important;
+  appearance:none !important;
+  outline:none;
+}
+
+.cardFormFigma .lowerRow{
+  width:312px;
+  display:flex;
+  gap:0;
+}
+.cardFormFigma .field{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.cardFormFigma .typeField{ width:122px; margin-right:12px; }
+.cardFormFigma .waterField{ width:122px; margin-right:11px; }
+.cardFormFigma .recordField{ width:45px; }
+
+.cardFormFigma .typeWrap{
+  position:relative;
+  width:122px;
+  height:45px;
+}
+.cardFormFigma select.figType{
+  width:122px !important;
+  height:45px !important;
+  min-height:45px !important;
+  border-radius:12px !important;
+  background:var(--surface2) !important;
+  border:0 !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), var(--shadow-pressed) !important;
+  padding:13px 0 !important; /* top/bottom 13 */
+  font-size:16px !important;
+  font-weight:900 !important; /* black */
+  line-height:19px !important;
+  color:var(--text) !important;
+  text-align:center !important;
+  text-align-last:center !important;
+  -webkit-appearance:none !important;
+  appearance:none !important;
+  outline:none;
+}
+.cardFormFigma .typeArrow{
+  position:absolute;
+  width:8px;
+  height:8px;
+  right:10px;
+  top:19px;
+  color:rgba(231,238,252,.7);
+  pointer-events:none;
+}
+
+.cardFormFigma .waterWrap{
+  width:122px;
+  height:45px;
+  border-radius:12px;
+  background:var(--surface2);
+  border:0;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), var(--shadow-pressed);
+  position:relative;
+  overflow:hidden;
+}
+.cardFormFigma .waterBtn{
+  position:absolute;
+  top:0;
+  width:45px;
+  height:45px;
+  border:0 !important;
+  background:transparent !important;
+  padding:0 !important;
+  color:var(--text) !important;
+  font-size:16px !important;
+  font-weight:900 !important; /* black */
+  line-height:19px !important;
+  display:flex;
+  align-items:center;
+}
+.cardFormFigma .waterMinus{
+  left:0;
+  justify-content:flex-start;
+  padding-left:12px !important;
+}
+.cardFormFigma .waterPlus{
+  right:0;
+  justify-content:flex-end;
+  padding-right:12px !important;
+}
+.cardFormFigma .waterValue{
+  position:absolute;
+  top:13px;
+  left:56px; /* spec: left 56, right 57 (0 width ~9) */
+  height:19px;
+  line-height:19px;
+  font-size:16px;
+  font-weight:900;
+  color:var(--text);
+  pointer-events:none;
+}
+
+.cardFormFigma .recordBtnFigma{
+  width:45px !important;
+  height:45px !important;
+  min-height:45px !important;
+  border-radius:12px !important;
+  background:var(--surface2) !important;
+  border:0 !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), var(--shadow-pressed) !important;
+  padding:0 !important;
+  position:relative;
+}
+.cardFormFigma .recordBtnFigma .recordIcon{
+  position:absolute;
+  width:25px;
+  height:25px;
+  top:9px;
+  right:9px;
+}
+
+.cardFormFigma .recordBtnFigma:disabled,
+.cardFormFigma .waterBtn:disabled,
+.cardFormFigma select:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+
+/* ===== Figma Form v2 (Route A): align with player cards, no fill (stroke only) ===== */
+.cardFormFigma{
+  padding:16px 14px 20px !important; /* match first card top/side rhythm, keep bottom 20 */
+}
+.cardFormFigma .figmaForm{
+  width:100% !important;
+  max-width:520px !important; /* match playerGrid max-width for perfect alignment on wide screens */
+  margin:0 auto !important;
+  padding:0 4px !important; /* + card padding 14 = 18 inset, same as player cards */
+  box-sizing:border-box;
+}
+
+/* Winner row stretches */
+.cardFormFigma .winnerGroup{ width:100% !important; }
+.cardFormFigma .winnerGroup .figLabel{ width:100% !important; }
+.cardFormFigma select.figWinner{
+  width:100% !important;
+  background:transparent !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.07) !important;
+}
+
+/* Lower row becomes responsive: 1fr / 1fr / 45 with asymmetric gaps 12 & 11 */
+.cardFormFigma .lowerRow{
+  width:100% !important;
+  display:grid !important;
+  grid-template-columns: minmax(122px,1fr) 12px minmax(122px,1fr) 11px 45px;
+  align-items:end;
+  box-sizing:border-box;
+}
+.cardFormFigma .typeField{ grid-column:1; width:auto !important; margin:0 !important; }
+.cardFormFigma .waterField{ grid-column:3; width:auto !important; margin:0 !important; }
+.cardFormFigma .recordField{ grid-column:5; width:45px !important; margin:0 !important; }
+
+/* Type control fills its grid track */
+.cardFormFigma .typeWrap{ width:100% !important; }
+.cardFormFigma select.figType{
+  width:100% !important;
+  background:transparent !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.07) !important;
+}
+/* Arrow: keep spec (8x8) and right=10; y uses top 19/bottom 18 */
+.cardFormFigma .typeArrow{
+  left:auto !important;
+  right:10px !important;
+  top:19px !important;
+}
+
+/* Water: stroke only (no fill) + keep 45px geometry (prevents “跑掉”) */
+.cardFormFigma .waterWrap{
+  width:100% !important;
+  height:45px !important;
+  background:transparent !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.07) !important;
+  border-radius:12px !important;
+  position:relative !important;
+  overflow:hidden;
+  padding:0 !important;
+  display:block !important;
+  box-sizing:border-box;
+}
+.cardFormFigma .waterBtn{
+  position:absolute !important;
+  top:0 !important;
+  width:45px !important;
+  height:45px !important;
+  min-height:0 !important; /* override global 44px */
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  padding:0 !important;
+  color:var(--text) !important;
+  font-size:16px !important;
+  font-weight:900 !important; /* black */
+  line-height:19px !important;
+  display:flex !important;
+  align-items:center !important;
+}
+.cardFormFigma .waterMinus{
+  left:0 !important;
+  justify-content:flex-start !important;
+  padding-left:12px !important;
+}
+.cardFormFigma .waterPlus{
+  right:0 !important;
+  justify-content:flex-end !important;
+  padding-right:12px !important;
+}
+.cardFormFigma .waterValue{
+  position:absolute !important;
+  top:13px !important; /* (45 - 19) / 2 */
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  height:19px !important;
+  line-height:19px !important;
+  font-size:16px !important;
+  font-weight:900 !important;
+  pointer-events:none;
+}
+
+/* Record button: stroke only */
+.cardFormFigma .recordBtnFigma{
+  background:transparent !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.07) !important;
+}
+
+</style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="appHeader">
+    <h1>游來游去</h1>
+    <button id="mobilePreviewBtn" class="previewBtn" type="button" aria-pressed="false" title="在桌機上預覽手機排版">📱手機預覽</button>
+  </div>
+
+    <div class="card cardPlayerSetup">
+      <div class="seatWrap">
+        <div id="namesRow" class="seatBoard"></div>
+        <button id="resetBtn" class="swapBtn" type="button" aria-label="重置" title="重置">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path fill="#ffffff" d="M12 5a7 7 0 0 1 6.5 4.4h-2.2a.9.9 0 0 0-.7 1.5l3.5 4a.9.9 0 0 0 1.4 0l3.5-4a.9.9 0 0 0-.7-1.5h-2.1A9 9 0 1 0 21 12h-2a7 7 0 1 1-7-7z"/>
+          </svg>
+          <span class="swapLabel">重置</span>
+        </button>
+      </div>
+    </div>
+
+<div class="card cardFormFigma">
+      <div class="figmaForm" role="group" aria-label="記錄本局">
+        <div class="dealerField sr-only" aria-hidden="true">
+          <label>莊家</label>
+          <select id="dealerSel">
+            <option value="0">玩家1</option>
+            <option value="1">玩家2</option>
+            <option value="2">玩家3</option>
+            <option value="3">玩家4</option>
+          </select>
+        </div>
+
+        <div class="winnerGroup">
+          <div class="figLabel">贏家</div>
+          <select id="winnerSel" class="figWinner">
+            <option value="0">玩家1</option>
+            <option value="1">玩家2</option>
+            <option value="2">玩家3</option>
+            <option value="3">玩家4</option>
+          </select>
+        </div>
+
+        <div class="lowerRow">
+          <div class="field typeField">
+            <div class="figLabel">贏法</div>
+            <div class="typeWrap">
+              <select id="typeSel" class="figType">
+            
+                        <option value="dao">胡牌</option>
+                        <option value="zimo">自摸</option>
+                        <option value="danyou">單游</option>
+                        <option value="shuangyou">雙游</option>
+                        <option value="tianhu">天胡</option>
+
+          </select>
+              <svg class="typeArrow" viewBox="0 0 8 8" width="8" height="8" aria-hidden="true" focusable="false">
+                <path d="M1 3l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="field waterField">
+            <div class="figLabel">水</div>
+            <div class="waterWrap">
+              <button type="button" id="waterMinus" class="waterBtn waterMinus" aria-label="減水">−</button>
+              <span id="waterDisplay" class="waterValue" aria-hidden="true">0</span>
+              <button type="button" id="waterPlus" class="waterBtn waterPlus" aria-label="加水">＋</button>
+              <input id="waterInput" class="sr-only" aria-hidden="true" tabindex="-1" type="number" value="0" min="0" max="12" inputmode="numeric" />
+            </div>
+          </div>
+
+          <div class="field recordField">
+            <div class="figLabel figLabelEmpty" aria-hidden="true">&nbsp;</div>
+            <button id="addRoundBtn" class="recordBtnFigma" aria-label="記錄本局" title="記錄本局">
+              <svg class="recordIcon" viewBox="0 0 24 24" width="25" height="25" aria-hidden="true" focusable="false">
+                <path fill="#ffffff" d="M3 21l6-2 12-12-5-5L4 14l-1 7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <select id="youSel" class="sr-only" aria-hidden="true" tabindex="-1">
+          <option value="none" selected>無</option>
+          <option value="yes">有</option>
+        </select>
+      </div>
+    </div>
+
+
+    <div class="card">
+      <strong>本局紀錄</strong>
+      <div id="roundList" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div><strong>總計</strong></div>
+        <div><button id="clearRoundsBtn">清空全部局數</button></div>
+      </div>
+      <div id="totalsArea"></div>
+      <div id="transfersArea" style="display:none"></div>
+    </div>
+
+  <!-- Name editor modal (seat map) -->
+  <div id="nameModal" class="nameModal" aria-hidden="true">
+    <div class="nameModalOverlay" data-close="1"></div>
+    <div class="nameModalCard" role="dialog" aria-modal="true" aria-labelledby="nameModalTitle">
+      <div class="nameModalTitle" id="nameModalTitle">編輯玩家名稱</div>
+      <input id="nameModalInput" class="nameModalInput" type="text" inputmode="text" autocomplete="off" />
+      <div class="nameModalActions">
+        <button type="button" id="nameModalCancel" class="nameModalBtn ghost">取消</button>
+        <button type="button" id="nameModalOk" class="nameModalBtn primary">確定</button>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  const LOOKUP = {
+    dao: {
+      0:{庄:16, 平:8}, 1:{庄:17, 平:9}, 2:{庄:18, 平:10}, 3:{庄:19, 平:11},
+      4:{庄:20, 平:12}, 5:{庄:21, 平:13}, 6:{庄:22, 平:14}, 7:{庄:23, 平:15},
+      8:{庄:24, 平:16}, 9:{庄:25, 平:17}, 10:{庄:26, 平:18}, 11:{庄:27, 平:19}, 12:{庄:28, 平:20}
+    },
+    zimo: {
+      0:{庄:32, 平:16}, 1:{庄:34, 平:18}, 2:{庄:36, 平:20}, 3:{庄:38, 平:22},
+      4:{庄:40, 平:24}, 5:{庄:42, 平:26}, 6:{庄:44, 平:28}, 7:{庄:46, 平:30},
+      8:{庄:48, 平:32}, 9:{庄:50, 平:34}, 10:{庄:52, 平:36}, 11:{庄:54, 平:38}, 12:{庄:56, 平:40}
+    },
+    danyou: {
+      1:{庄:68, 平:36}, 2:{庄:72, 平:40}, 3:{庄:76, 平:44}, 4:{庄:80, 平:48},
+      5:{庄:84, 平:52}, 6:{庄:88, 平:56}, 7:{庄:92, 平:60}, 8:{庄:96, 平:64},
+      9:{庄:100, 平:68}, 10:{庄:104, 平:72}, 11:{庄:108, 平:76}, 12:{庄:112, 平:80}
+    },
+    shuangyou: {
+      1:{庄:136, 平:72}, 2:{庄:144, 平:80}, 3:{庄:152, 平:88}, 4:{庄:160, 平:96},
+      5:{庄:168, 平:104}, 6:{庄:176, 平:112}, 7:{庄:184, 平:120}, 8:{庄:192, 平:128},
+      9:{庄:200, 平:136}, 10:{庄:208, 平:144}, 11:{庄:216, 平:152}, 12:{庄:224, 平:160}
+    },
+    // 天胡：水數固定 0（UI 會鎖住水）
+    tianhu: {
+      0:{庄:64, 平:32}
+    }
+  };
+
+  let players = ["玩家1","玩家2","玩家3","玩家4"];
+
+// ===== Random "busted" taunts (when someone drops to 0 or below) =====
+// 只輸出「{name}輸掉XXXX」這種短句（不含「這局」）
+const BUST_TAUNT_SUFFIXES = [
+  "金額歸0",
+  "送出一碗泡麵",
+  "下把紅紅火火",
+  "我剪剪剪",
+  "決定下把出老千",
+];
+
+let bustedTauntCacheIdx = null;
+let bustedTauntCacheText = "";
+
+function pickRandomTauntSuffix(){
+  const n = BUST_TAUNT_SUFFIXES.length;
+  if (!n) return "輸掉褲子";
+  return BUST_TAUNT_SUFFIXES[Math.floor(Math.random() * n)];
+}
+
+// Returns e.g. "A輸掉一個LV"
+function getBustedTaunt(idx){
+  if (idx == null || idx < 0 || idx >= players.length) return "";
+  if (bustedTauntCacheIdx === idx && bustedTauntCacheText) return bustedTauntCacheText;
+  bustedTauntCacheIdx = idx;
+  bustedTauntCacheText = String(players[idx]) + pickRandomTauntSuffix();
+  return bustedTauntCacheText;
+}
+
+
+const START_STACK = 100; // 每局每人起始 100
+
+// 連莊規則：逆時針當莊（以座位佈局 A(top)=0, B(left)=1, C(right)=2, D(bottom)=3）
+// 逆時針順序：A(0) → B(1) → D(3) → C(2) → A(0)
+const CCW_ORDER = [0, 1, 3, 2];
+function nextDealerCCW(d){
+  const n = CCW_ORDER.length;
+  const i = CCW_ORDER.indexOf(d);
+  if (i === -1) return (Number(d) + 1) % (players.length || 4);
+  return CCW_ORDER[(i + 1) % n];
+}
+
+
+function computeAllRoundsDetailed(){
+  const n = players.length;
+  let remain = Array(n).fill(START_STACK);
+  let bustedIdx = null;
+
+  const youRecvCount = Array(n).fill(0);
+  const youRecvAmt = Array(n).fill(0);
+
+  const detailedRounds = [];
+
+  // 對「下一把」的預期（用於判斷手動改莊 -> 視為新一段）
+  let expectedDealer = null;
+  let expectedStreak = 1;
+
+  for (let idx = 0; idx < rounds.length; idx++){
+    const r0 = rounds[idx];
+
+    // 本把連莊：第一把固定 1；之後若莊家被手動改掉（與預期不同）→ 連莊回到 1
+    if (idx === 0){
+      expectedDealer = r0.dealer;
+      expectedStreak = 1;
+    } else {
+      if (r0.dealer !== expectedDealer){
+        expectedDealer = r0.dealer;
+        expectedStreak = 1;
+      }
+    }
+
+    const dealerStreak = expectedStreak;
+    const multiplier = Math.pow(2, Math.max(0, dealerStreak - 1));
+
+    const lines = [];
+
+    // 主結算：每位輸家付給贏家（輸家若為莊家或贏家為莊家 → 用莊家價）
+    for (let i = 0; i < n; i++){
+      if (i === r0.winner) continue;
+
+      const dealerRate = (r0.winner === r0.dealer) || (i === r0.dealer);
+      const base = lookupAmount({
+        type: r0.type,
+        water: r0.water,
+        dealerRate
+      });
+
+      if (base == null) continue;
+
+      // 連莊倍數只套用在「涉及莊家」的那一份金額：
+      // - 莊家贏：所有輸家都按莊價，並套用倍數
+      // - 莊家沒贏：只有莊家那位輸家套用倍數，其他照平家價
+      const m = dealerRate ? multiplier : 1;
+      const owed = base * m;
+      const pay = Math.min(owed, remain[i]);
+      if (pay <= 0) continue;
+
+      remain[i] -= pay;
+      remain[r0.winner] += pay;
+
+      let raw = (m > 1)
+        ? `查表 ${base}×${m}（連莊${dealerStreak-1}）`
+        : `查表 ${base}`;
+      if (pay < owed) raw += `（封頂 ${pay}）`;
+
+      lines.push({
+        from: i,
+        to: r0.winner,
+        amount: pay,
+        raw,
+        role: (dealerRate ? "庄" : "平")
+      });
+    }
+
+    // 游金：固定由贏家收（10），不套用連莊倍數
+    if (r0.youSelected){
+      const youWho = r0.winner;
+      const youAmt = 10;
+      let gotAny = false;
+
+      for (let i = 0; i < n; i++){
+        if (i === youWho) continue;
+
+        const pay = Math.min(youAmt, remain[i]);
+        if (pay <= 0) continue;
+
+        remain[i] -= pay;
+        remain[youWho] += pay;
+        gotAny = true;
+
+        let raw = `游金 +${youAmt}`;
+        if (pay < youAmt) raw += `（封頂 ${pay}）`;
+
+        lines.push({
+          from: i,
+          to: youWho,
+          amount: pay,
+          raw,
+          role: "游金"
+        });
+
+        youRecvAmt[youWho] += pay;
+      }
+
+      if (gotAny) youRecvCount[youWho] += 1;
+    }
+
+    if (bustedIdx == null){
+      const idx0 = remain.findIndex(v => v <= 0);
+      if (idx0 !== -1) bustedIdx = idx0;
+    }
+
+    // 推進「下一把」莊家/連莊
+    // - 莊家贏：連莊+1
+    // - 莊家沒贏：莊位逆時針順到下一位（不看贏家）
+    if (r0.winner === r0.dealer){
+      expectedDealer = r0.dealer;
+      expectedStreak = dealerStreak + 1;
+    } else {
+      expectedDealer = nextDealerCCW(r0.dealer);
+      expectedStreak = 1;
+    }
+
+    detailedRounds.push(Object.assign({}, r0, { dealerStreak, multiplier, lines }));
+  }
+
+  const totals = remain.map(v => Math.round((v - START_STACK) * 100) / 100);
+
+  // 若尚未記錄任何局：下一把莊家 = UI 當前選擇；連莊固定 1
+  const nextDealer = rounds.length ? expectedDealer : Number((document.getElementById("dealerSel") && document.getElementById("dealerSel").value) ? document.getElementById("dealerSel").value : 0);
+  const nextStreak = rounds.length ? expectedStreak : 1;
+
+  return { detailedRounds, totals, remain, bustedIdx, nextDealer, nextStreak, youRecvCount, youRecvAmt };
+}
+
+function simulateGameState(){
+  const st = computeAllRoundsDetailed();
+  return { remain: st.remain, bustedIdx: st.bustedIdx };
+}
+
+function setRoundLocked(isLocked, reasonText=""){
+  const btn = document.getElementById("addRoundBtn");
+  if(btn){
+    btn.disabled = !!isLocked;
+    btn.style.opacity = isLocked ? "0.55" : "";
+    btn.style.cursor = isLocked ? "not-allowed" : "";
+    btn.title = isLocked ? (reasonText || "本局已結算") : "";
+  }
+}
+
+// v6: Record button lock should respect「尚未設莊」與「輸光結算」
+let lastBustedIdx = null;
+
+function maybeResetDealerOnBust(bustedIdx){
+  if (bustedIdx == null){
+    lastBustedIdx = null;
+    return;
+  }
+  if (lastBustedIdx == null){
+    lastBustedIdx = bustedIdx;
+    // 有人輸光本金：莊家重置（需重新起莊）
+    dealerManualOverride = false;
+    try{
+      const dealerSel = document.getElementById("dealerSel");
+      if (dealerSel) dealerSel.value = "0";
+    }catch(e){}
+    try{ setDealerAssigned(false); }catch(e){}
+  }
+}
+
+function setRoundSoftLocked(isSoft, reasonText=""){
+  const btn = document.getElementById("addRoundBtn");
+  if(!btn) return;
+  btn.disabled = false; // soft-lock keeps it clickable
+  btn.dataset.softLocked = isSoft ? "1" : "";
+  btn.style.opacity = isSoft ? "0.60" : "";
+  btn.style.cursor = isSoft ? "pointer" : "";
+  btn.title = isSoft ? (reasonText || "請先設定起莊") : "";
+}
+
+function syncRecordLock(bustedIdx){
+  if (bustedIdx != null){
+    setRoundLocked(true, `本局已結算：${getBustedTaunt(bustedIdx)}`);
+    return;
+  }
+  if (!dealerAssigned){
+    // Soft lock: keep clickable, but prompt user to set dealer
+    setRoundSoftLocked(true, "請先長按任一玩家，設定起莊");
+    return;
+  }
+  setRoundSoftLocked(false);
+  setRoundLocked(false);
+}
+
+  let rounds = [];
+  let youForcedByType = false;
+
+  // 連莊：是否手動改過「下一把莊家」
+  let dealerManualOverride = false;
+  let suppressDealerChange = false;
+
+  // 方案B：是否已『設莊』（未設莊時顯示引導）
+  let dealerAssigned = false;
+
+
+  let showDealerHint = true;
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+  function fmtMoney(x){
+    const n = Math.round((x + Number.EPSILON) * 100) / 100;
+    return n.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2});
+  }
+
+  // ===== Auto-fit long names in the totals (mobile) =====
+  function fitTextToWidth(el, maxPx, minPx){
+    if(!el) return;
+    var max = (typeof maxPx === "number") ? maxPx : 16;
+    var min = (typeof minPx === "number") ? minPx : 10;
+
+    // Reset
+    el.style.fontSize = max + "px";
+    el.style.whiteSpace = "nowrap";
+    el.style.textOverflow = "clip";
+    el.style.wordBreak = "";
+    el.style.lineHeight = "";
+
+    // If not laid out yet, bail
+    if(!el.clientWidth) return;
+
+    var size = max;
+    var safety = 0;
+    while(el.scrollWidth > el.clientWidth && size > min && safety < 40){
+      size -= 1;
+      el.style.fontSize = size + "px";
+      safety++;
+    }
+
+    // If still overflow (super long name), allow wrap as a fallback
+    if(el.scrollWidth > el.clientWidth){
+      el.style.whiteSpace = "normal";
+      el.style.wordBreak = "break-all";
+      el.style.lineHeight = "1.1";
+    }
+  }
+
+  function fitAllTotalsNames(){
+    var root = document.getElementById("totalsArea");
+    if(!root) return;
+
+    // 1) 總計大卡：玩家名（左側），盡量縮到單行可放下
+    var topNames = root.querySelectorAll(".playerTotalTop .playerName");
+    for(var i=0;i<topNames.length;i++){
+      fitTextToWidth(topNames[i], 18, 8);
+    }
+
+    // 2) 付款明細卡：左右兩側玩家名也自動縮字，避免被 ... 截掉
+    var transferNames = root.querySelectorAll(".settleCard .transferWho");
+    for(var j=0;j<transferNames.length;j++){
+      fitTextToWidth(transferNames[j], 16, 8);
+    }
+  }
+
+  function debounce(fn, wait){
+    var t = null;
+    return function(){
+      var ctx = this, args = arguments;
+      clearTimeout(t);
+      t = setTimeout(function(){ fn.apply(ctx, args); }, wait);
+    };
+  }
+
+  window.addEventListener("resize", debounce(function(){
+    requestAnimationFrame(fitAllTotalsNames);
+  }, 120));
+
+  function buildOptions(sel){
+    sel.innerHTML = players.map((p,i)=>`<option value="${i}">${escapeHtml(p)}</option>`).join("");
+  }
+
+  function streakMultiplier(streak){
+    const s = Math.max(1, Number(streak) || 1);
+    return Math.pow(2, s - 1);
+  }
+
+  function updateStreakBadge(streak){
+    const el = $("streakBadge");
+    if (!el) return;
+    const s = Math.max(1, Number(streak) || 1);
+    const mul = streakMultiplier(s);
+    const carry = Math.max(0, s - 1);
+
+    // 起莊（第一把/新一段）不顯示徽章；只有連莊才顯示：連1、連2…
+    if (carry === 0){
+      el.style.display = "none";
+      el.innerHTML = "";
+      return;
+    }
+
+    el.style.display = "inline-flex";
+    el.innerHTML = `連${carry}`;
+  }
+
+  function syncNextRoundUI(){
+    const dealerSel = $("dealerSel");
+    if (!dealerSel) return;
+
+    // 尚未記錄任何局：第一把連莊永遠是 1
+    if (!rounds.length){
+      updateStreakBadge(1);
+      return;
+    }
+
+    const st = computeAllRoundsDetailed();
+
+    if (!dealerManualOverride){
+      const expectedDealer = st.nextDealer;
+      const expectedStreak = st.nextStreak;
+
+      if (Number(dealerSel.value || 0) !== expectedDealer){
+        suppressDealerChange = true;
+        dealerSel.value = String(expectedDealer);
+        suppressDealerChange = false;
+      }
+      updateStreakBadge(expectedStreak);
+    } else {
+      // 手動改莊：視為新一段
+      updateStreakBadge(1);
+    }
+  }
+  function formatSeatName(name){
+    const raw = String(name || "").trim();
+    return raw ? escapeHtml(raw) : "—";
+  }
+
+  function setDealerAssigned(v){
+    dealerAssigned = !!v;
+    if (dealerAssigned) showDealerHint = false;
+    try{ updateDealerDropZones(); }catch(e){}
+  }
+
+  function updateDealerDropZones(){
+    const on = (!dealerAssigned) && !!showDealerHint;
+    const grid = document.getElementById("playerGrid") || document.getElementById("seatGrid");
+    if (grid) grid.classList.toggle("needPickDealer", !!on);
+
+    // Keep a lightweight state hook for styling (no drag UI anymore)
+    document.querySelectorAll(".playerCard[data-seat], .seatCard[data-seat]").forEach(el=>{
+      el.classList.toggle("is-dropZone", !!on);
+    });
+  }
+
+  function renderDealerChip(){
+    const chip = document.getElementById("dealerChip");
+    if(!chip) return;
+
+    const center = document.getElementById("seatCenter");
+    const dealerSel = document.getElementById("dealerSel");
+
+    let target = center;
+    if (dealerAssigned){
+      const d = Number((dealerSel && dealerSel.value != null) ? dealerSel.value : 0);
+      target = document.querySelector(`.seatBadgeSlot[data-slot="${d}"]`) || center;
+    }
+
+    if (target && chip.parentElement !== target) target.appendChild(chip);
+    chip.classList.toggle("is-docked", target && target.classList.contains("seatBadgeSlot"));
+    updateDealerDropZones();
+  }
+
+  function initDealerChipDrag(){
+    const chip = document.getElementById("dealerChip");
+    if(!chip || chip.dataset.inited) return;
+    chip.dataset.inited = "1";
+
+    let dragging = false;
+    let drag = { originParent:null, originNext:null, offsetX:0, offsetY:0, hoverSeat:null };
+
+    function clearTargets(){
+      document.querySelectorAll(".seatCard.is-dropTarget").forEach(el=>el.classList.remove("is-dropTarget"));
+    }
+
+    function onMove(e){
+      if(!dragging) return;
+      chip.style.left = (e.clientX - drag.offsetX) + "px";
+      chip.style.top  = (e.clientY - drag.offsetY) + "px";
+
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const seat = el && el.closest ? el.closest(".seatCard[data-seat]") : null;
+      if (seat !== drag.hoverSeat){
+        clearTargets();
+        drag.hoverSeat = seat;
+        if (drag.hoverSeat) drag.hoverSeat.classList.add("is-dropTarget");
+      }
+    }
+
+    function endDrag(e){
+      if(!dragging) return;
+      dragging = false;
+
+      clearTargets();
+      chip.classList.remove("is-dragging");
+
+      // restore positioning; renderDealerChip() will dock it
+      chip.style.position = "";
+      chip.style.left = "";
+      chip.style.top = "";
+      chip.style.zIndex = "";
+
+      const seat = drag.hoverSeat;
+      drag.hoverSeat = null;
+
+      if (seat && seat.dataset && seat.dataset.seat != null){
+        const idx = Number(seat.dataset.seat);
+        const dealerSel = document.getElementById("dealerSel");
+        if (dealerSel){
+          dealerSel.value = String(idx);
+          // 讓既有連莊邏輯接手
+          dealerSel.dispatchEvent(new Event("change", { bubbles:true }));
+        }
+        setDealerAssigned(true);
+      }
+
+      // 同步 UI（含記錄按鈕/下一把莊位）
+      renderAll();
+    }
+
+    chip.addEventListener("pointerdown", (e)=>{
+      // iOS/Android：用 pointer drag，避免原生 DnD 不穩
+      e.preventDefault();
+      const rect = chip.getBoundingClientRect();
+
+      dragging = true;
+      drag.originParent = chip.parentElement;
+      drag.originNext = chip.nextSibling;
+      drag.offsetX = e.clientX - rect.left;
+      drag.offsetY = e.clientY - rect.top;
+      drag.hoverSeat = null;
+
+      chip.classList.add("is-dragging");
+      chip.style.position = "fixed";
+      chip.style.left = (e.clientX - drag.offsetX) + "px";
+      chip.style.top  = (e.clientY - drag.offsetY) + "px";
+      chip.style.zIndex = "9999";
+      document.body.appendChild(chip);
+
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", (ev)=>{ window.removeEventListener("pointermove", onMove); endDrag(ev); }, { once:true });
+      window.addEventListener("pointercancel", (ev)=>{ window.removeEventListener("pointermove", onMove); endDrag(ev); }, { once:true });
+    });
+  }
+
+
+  // ===== Inline name editing (tap to edit in-place) =====
+  let inlineEditingIdx = null;
+
+  function startInlineNameEdit(idx, btn){
+    if (btn && btn.classList.contains("is-editing")) return;
+    const main = document.getElementById(`seatName${idx}`);
+    if (!main) return;
+
+    // Prevent long-press selecting dealer while editing
+    if (btn) btn.classList.add("is-editing");
+    inlineEditingIdx = idx;
+
+    const current = (players[idx] != null ? String(players[idx]) : "").trim();
+    const input = document.createElement("input");
+    input.type = "text";
+    input.inputMode = "text";
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    input.className = "inlineNameInput";
+    input.value = current;
+    input.setAttribute("aria-label", `編輯玩家${idx+1}名稱`);
+
+    // Replace display with input
+    main.innerHTML = "";
+    main.appendChild(input);
+
+    // Stop click bubbling (so button doesn't re-trigger)
+    input.addEventListener("pointerdown", (e)=>{ e.stopPropagation(); });
+    input.addEventListener("click", (e)=>{ e.stopPropagation(); });
+
+    const finish = (commit)=>{
+      // restore
+      const v = (input.value || "").trim();
+      if (commit){
+        players[idx] = v || `玩家${idx+1}`;
+        renderSelectors();
+      }
+      // Clear editing state first, then re-render UI
+      inlineEditingIdx = null;
+      if (btn) btn.classList.remove("is-editing");
+
+      try{ renderNames(); }catch(e){}
+      try{ renderAll(); }catch(e){}
+    };
+
+    input.addEventListener("keydown", (e)=>{
+      if (e.key === "Enter"){ e.preventDefault(); finish(true); }
+      if (e.key === "Escape"){ e.preventDefault(); finish(false); }
+    });
+    input.addEventListener("blur", ()=> finish(true), { once:true });
+    // Focus (must be synchronous on iOS to open the keyboard)
+    try{ input.focus(); }catch(e){}
+    // Select text (can be async)
+    setTimeout(()=>{ try{ input.setSelectionRange(0, input.value.length); }catch(e){} }, 0);
+  }
+
+  function initNameModal(){
+    const modal = document.getElementById("nameModal");
+    if(!modal || modal.dataset.inited) return;
+    modal.dataset.inited = "1";
+
+    let editingIdx = null;
+
+    function open(idx){
+      editingIdx = idx;
+      const input = document.getElementById("nameModalInput");
+      if(input){
+        input.value = players[idx] || "";
+        setTimeout(()=>{ try{ input.focus(); input.select(); }catch(e){} }, 0);
+      }
+      modal.classList.add("is-open");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function close(){
+      modal.classList.remove("is-open");
+      modal.setAttribute("aria-hidden", "true");
+      editingIdx = null;
+    }
+
+    modal.addEventListener("click", (e)=>{
+      const t = e.target;
+      if (t && (t.dataset && t.dataset.close === "1")) close();
+    });
+    document.getElementById("nameModalCancel")?.addEventListener("click", close);
+
+    function commit(){
+      if (editingIdx == null) return close();
+      const input = document.getElementById("nameModalInput");
+      const v = (input ? input.value : "").trim();
+      players[editingIdx] = v || `玩家${editingIdx+1}`;
+      renderSelectors();
+      renderNames();
+      renderAll();
+      close();
+    }
+
+    document.getElementById("nameModalOk")?.addEventListener("click", commit);
+    document.getElementById("nameModalInput")?.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){ e.preventDefault(); commit(); }
+      if(e.key === "Escape"){ e.preventDefault(); close(); }
+    });
+
+    window.__openNameModal = open;
+  }
+
+  function renderNames(){
+    if (!Array.isArray(players) || players.length !== 4) players = ["玩家1","玩家2","玩家3","玩家4"];
+    const root = $("namesRow");
+    if(!root) return;
+
+    if(!root.dataset.inited){
+      root.dataset.inited = "1";
+      root.innerHTML = `
+        <div class="playerGrid" id="playerGrid" aria-label="玩家">
+          <div class="playerCard" data-seat="0" role="button" tabindex="0" aria-label="玩家 1">
+            <div class="playerMain" id="seatName0"></div>
+            <div class="playerHint">（長按起莊）</div>
+          </div>
+          <div class="playerCard" data-seat="1" role="button" tabindex="0" aria-label="玩家 2">
+            <div class="playerMain" id="seatName1"></div>
+            <div class="playerHint">（長按起莊）</div>
+          </div>
+          <div class="playerCard" data-seat="2" role="button" tabindex="0" aria-label="玩家 3">
+            <div class="playerMain" id="seatName2"></div>
+            <div class="playerHint">（長按起莊）</div>
+          </div>
+          <div class="playerCard" data-seat="3" role="button" tabindex="0" aria-label="玩家 4">
+            <div class="playerMain" id="seatName3"></div>
+            <div class="playerHint">（長按起莊）</div>
+          </div>
+        </div>
+      `;
+
+      // 點卡片：改名字（跳鍵盤/彈窗）；長按：起莊（選第一位莊家）
+      const longPressMs = 420;
+
+      root.querySelectorAll('.playerCard[data-seat]').forEach(btn=>{
+        const idx = Number(btn.dataset.seat);
+        let t = null;
+
+        const start = (e)=>{
+          btn.classList.add("is-pressing");
+          t = window.setTimeout(()=>{
+            btn.dataset.ignoreClick = "1";
+
+            const sel = $("dealerSel");
+            if (sel){
+              sel.value = String(idx);
+              sel.dispatchEvent(new Event("change", { bubbles:true }));
+            } else {
+              try{ setDealerAssigned(true); }catch(e){}
+            }
+
+            // 讓 UI 立刻更新（顯示金點/隱藏提示）
+            try{ renderNames(); }catch(e){}
+            try{ navigator.vibrate && navigator.vibrate(10); }catch(e){}
+          }, longPressMs);
+        };
+
+        const cancel = ()=>{
+          btn.classList.remove("is-pressing");
+          if (t){ clearTimeout(t); t = null; }
+        };
+
+        btn.addEventListener("pointerdown", (e)=>{
+          if (btn.classList.contains("is-editing")) return;
+          if (e.pointerType === "mouse" && e.button !== 0) return;
+          start(e);
+        });
+        btn.addEventListener("pointerup", cancel);
+        btn.addEventListener("pointercancel", cancel);
+        btn.addEventListener("pointerleave", cancel);
+
+        btn.addEventListener("click", (e)=>{
+          if (btn.classList.contains("is-editing")) return;
+          if (btn.dataset.ignoreClick === "1"){
+            btn.dataset.ignoreClick = "0";
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          startInlineNameEdit(idx, btn);
+        });
+
+        // Keyboard accessibility (desktop)
+        btn.addEventListener("keydown", (e)=>{
+          if (btn.classList.contains("is-editing")) return;
+          if (e.key === "Enter" || e.key === " "){
+            e.preventDefault();
+            startInlineNameEdit(idx, btn);
+          }
+        });
+      });
+
+      // initNameModal(); // no longer used (inline edit)
+      try{ updateDealerDropZones(); }catch(e){}}
+
+    // 更新顯示
+    for (let i=0; i<4; i++){
+      const el = document.getElementById(`seatName${i}`);
+      if (el){
+        const editingThis = (inlineEditingIdx === i) && el.querySelector(".inlineNameInput");
+        if (!editingThis) el.innerHTML = formatSeatName(players[i]);
+      }
+      const seatBtn = root.querySelector(`.playerCard[data-seat="${i}"]`);
+      if (seatBtn) seatBtn.setAttribute('aria-label', `玩家 ${i+1}：${players[i]}`);
+    }
+    // 莊家標記（選中才顯示）
+    try{
+      const sel = $("dealerSel");
+      const dealerIdx = sel ? Number(sel.value || 0) : 0;
+      root.querySelectorAll('.playerCard[data-seat]').forEach(btn=>{
+        const idx = Number(btn.dataset.seat);
+        btn.classList.toggle('isDealer', !!dealerAssigned && idx === dealerIdx);
+      });
+    }catch(e){}
+
+    // 提示（重置後才出現；起莊一次後隱藏）
+    try{ updateDealerDropZones(); }catch(e){}
+  }
+
+  function toggleYouUI(){
+    // v5.5: 游金者固定為贏家，無需選擇
+    syncYouSegmented();
+    syncYouSegmentedDisabled();
+  }
+
+
+  // ===== Segmented control for 游金 (無/有) =====
+  function syncYouSegmented(){
+    const seg = $("youSeg");
+    if (!seg) return;
+    const v = $("youSel").value;
+    seg.querySelectorAll(".seg-btn").forEach(btn=>{
+      const active = (btn.dataset.value === v);
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-selected", active ? "true" : "false");
+    });
+  }
+
+  function syncYouSegmentedDisabled(){
+    const seg = $("youSeg");
+    if (!seg) return;
+    seg.classList.toggle("is-disabled", !!$("youSel").disabled);
+  }
+
+
+  function updateYouPill(){
+    const pill = $("youPill");
+    if (!pill) return;
+    const youSel = $("youSel");
+    const v = youSel ? youSel.value : "none";
+    pill.textContent = (v === "yes") ? "有" : "無";
+    pill.classList.toggle("is-on", v === "yes");
+  }
+
+  function setYouValue(v){
+    const sel = $("youSel");
+    if (!sel) return;
+    if (sel.value === v) return;
+    sel.value = v;
+    // trigger existing change handlers
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+    updateYouPill();
+  }
+
+  function initYouSegmented(){
+    const seg = $("youSeg");
+    if (!seg) return;
+    seg.querySelectorAll(".seg-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        if ($("youSel").disabled) return;
+        setYouValue(btn.dataset.value);
+      });
+    });
+    syncYouSegmented();
+    syncYouSegmentedDisabled();
+  }
+
+
+  function renderSelectors(){
+    const dealerSel = $("dealerSel");
+    const winnerSel = $("winnerSel");
+    const oldDealer = (dealerSel && dealerSel.value != null) ? dealerSel.value : "0";
+    const oldWinner = (winnerSel && winnerSel.value != null) ? winnerSel.value : "0";
+
+    buildOptions(dealerSel);
+    buildOptions(winnerSel);
+
+    // 盡量保留目前選擇（避免 iOS 檔案預覽或重新渲染時變成空白）
+    dealerSel.value = (dealerSel.querySelector(`option[value="${oldDealer}"]`) ? oldDealer : "0");
+    winnerSel.value = (winnerSel.querySelector(`option[value="${oldWinner}"]`) ? oldWinner : "0");
+
+    toggleYouUI();
+  }
+
+  function lookupAmount({ type, water, dealerRate }){
+  const t = LOOKUP[type];
+  const row = t ? t[water] : null;
+  if (!row) return null;
+  return dealerRate ? row["庄"] : row["平"];
+}
+
+  function typeLabel(t){
+        return ({dao:"胡牌", tianhu:"天胡", zimo:"自摸", danyou:"單游", shuangyou:"雙游"}[t] || t);
+  }
+
+  function syncWaterByType(){
+  const type = $("typeSel").value;
+  const input = $("waterInput");
+  const minusBtn = $("waterMinus");
+  const plusBtn = $("waterPlus");
+  const lockWater = (type === "tianhu");
+  input.disabled = lockWater;
+  if (minusBtn) minusBtn.disabled = lockWater;
+  if (plusBtn) plusBtn.disabled = lockWater;
+
+
+  let v = Number(input.value || 0);
+  if (!Number.isFinite(v)) v = 0;
+
+  v = Math.max(0, Math.min(12, v));
+  if (type === "tianhu") v = 0;
+  if ((type === "danyou" || type === "shuangyou") && v < 1) v = 1;
+  input.value = String(v);
+
+  // 同步水顯示（Figma UI）
+  const disp = $("waterDisplay");
+  if (disp) disp.textContent = String(v);
+
+  // --- 單游/雙游：自動開啟游金 ---
+  const isYouType = (type === "danyou" || type === "shuangyou");
+
+  if (isYouType) {
+    // 強制切到「有」
+    if ($("youSel").value !== "yes") $("youSel").value = "yes";
+
+    youForcedByType = true;
+// 避免手滑改回「無」
+    $("youSel").disabled = true;
+  } else {
+    // 從單游/雙游切回來：解除強制
+    if (youForcedByType) {
+      $("youSel").disabled = false;
+      // 策略 B：保留使用者目前選擇（不動 value）
+      youForcedByType = false;
+    }
+  }
+
+  toggleYouUI();
+  updateYouPill();
+}
+
+  function addRound(){
+  const st0 = simulateGameState();
+  if (st0.bustedIdx != null){
+    alert(`本局已結算：${getBustedTaunt(st0.bustedIdx)}。請清空全部局數/開始新局。`);
+    setRoundLocked(true, "本局已結算");
+    return;
+  }
+  if (!dealerAssigned){
+    alert("請先長按任一玩家，設定起莊。");
+    try{
+      const wrap = document.querySelector(".seatWrap");
+      if (wrap) wrap.scrollIntoView({ behavior: "smooth", block: "center" });
+      const chip = document.getElementById("dealerChip");
+      if (chip){
+        chip.classList.remove("is-pulse");
+        // restart animation
+        void chip.offsetWidth;
+        chip.classList.add("is-pulse");
+        setTimeout(()=>chip.classList.remove("is-pulse"), 950);
+      }
+    }catch(e){}
+    syncRecordLock(null);
+    return;
+  }
+
+
+  const dealer = Number($("dealerSel").value);
+  const winner = Number($("winnerSel").value);
+  const type = $("typeSel").value;
+  const water = Number($("waterInput").value);
+
+  if ((type === "danyou" || type === "shuangyou") && water === 0){
+    alert("單游/雙游的水=0 在水表是無效（—）。請選 1～12。");
+    return;
+  }
+
+  // 基本查表驗證（避免後續渲染計算失敗）
+  const t1 = lookupAmount({ type, water, dealerRate: true });
+  const t2 = lookupAmount({ type, water, dealerRate: false });
+  if (t1 == null || t2 == null){
+    alert("查表失敗：請確認贏法與水數是否有效。");
+    return;
+  }
+
+  const youSelected = ($("youSel") && $("youSel").value === "yes");
+
+  rounds.push({ dealer, winner, type, water, youSelected });
+
+  // 記錄後：回到自動同步「下一把莊家 + 連莊」
+  dealerManualOverride = false;
+
+  // ✅ 游金預設回到「無」（但單游/雙游會在 syncWaterByType() 內強制為「有」）
+  try{
+    const isYouType = (type === "danyou" || type === "shuangyou");
+    if (!isYouType){
+      if (typeof setYouValue === "function") setYouValue("none");
+      else if ($("youSel")) $("youSel").value = "none";
+    }
+    if (typeof toggleYouUI === "function") toggleYouUI();
+    if (typeof updateYouPill === "function") updateYouPill();
+  }catch(e){}
+
+  renderAll();
+  try{ if (typeof flashRecordBtn === "function") flashRecordBtn(); }catch(e){}
+}
+
+function removeRound(idx){
+  rounds.splice(idx,1);
+
+  // 刪除後：回到自動同步（下一把莊家/連莊重新計算）
+  dealerManualOverride = false;
+
+  // ✅ 刪除單局後：同步 UI 狀態，避免游金 pill / youSel 不一致導致 badge 偶發失效
+  try{ syncWaterByType(); }catch(e){}
+  try{ toggleYouUI(); }catch(e){}
+  try{ updateYouPill(); }catch(e){}
+  try{ if (typeof syncYouSegmented === "function") syncYouSegmented(); }catch(e){}
+
+  // ✅ 刪除後可能解除「輸光結算」，重新判斷鎖定
+  try{
+    const st = simulateGameState();
+    setRoundLocked(st.bustedIdx != null, st.bustedIdx != null ? `本局已結算：${getBustedTaunt(st.bustedIdx)}` : "");
+  }catch(e){}
+
+  renderAll();
+}
+  window.removeRound = removeRound;
+
+  function computeTotals(){
+  const st = computeAllRoundsDetailed();
+  return {
+    totals: st.totals,
+    youRecvCount: st.youRecvCount,
+    youRecvAmt: st.youRecvAmt,
+    remain: st.remain,
+    bustedIdx: st.bustedIdx
+  };
+}
+
+function settleTransfers(totals){
+    const creditors = [];
+    const debtors = [];
+    totals.forEach((amt,i)=>{
+      const a = Math.round(amt*100)/100;
+      if (a > 0) creditors.push({i, amt:a});
+      else if (a < 0) debtors.push({i, amt:-a});
+    });
+
+    const res = [];
+    let ci=0, di=0;
+    while(ci<creditors.length && di<debtors.length){
+      const c = creditors[ci], d = debtors[di];
+      const pay = Math.min(c.amt, d.amt);
+      if (pay > 0.000001) res.push({from:d.i, to:c.i, amount:pay});
+      c.amt -= pay; d.amt -= pay;
+      if (c.amt <= 0.000001) ci++;
+      if (d.amt <= 0.000001) di++;
+    }
+    return res;
+  }
+
+  function badgeIf(name, should){
+    return should ? `${name}<span class="badge">🟡游金</span>` : name;
+  }
+
+  function renderRoundList(){
+    if (!rounds.length){
+      $("roundList").innerHTML = `<div class="muted">尚未記錄局數。</div>`;
+      return;
+    }
+
+    const st = computeAllRoundsDetailed();
+    const rr = st.detailedRounds;
+
+    $("roundList").innerHTML = rr.map((r,idx)=>{
+      const youLine = r.lines.find(L => L.role === "游金");
+      const youWho = youLine ? youLine.to : null;
+
+      const hasYou = !!r.youSelected || r.lines.some(L => L.role === "游金");
+
+      const lines = r.lines.map(L=>{
+        return `${escapeHtml(players[L.from])}（${escapeHtml(L.role)}） → ${escapeHtml(players[L.to])}：${fmtMoney(L.amount)} <span class="muted">(${escapeHtml(L.raw)})</span>`;
+      }).join("<br>");
+
+      const baseDealer = lookupAmount({type:r.type, water:r.water, dealerRate:true}) || 0;
+      const baseCommon = lookupAmount({type:r.type, water:r.water, dealerRate:false}) || 0;
+      const mul = r.multiplier || 1;
+
+      const carry = Math.max(0, (r.dealerStreak || 1) - 1);
+// 起莊不顯示；只有連莊才顯示：連1、連2…
+const streakText = (carry > 0) ? `連${carry}` : "";
+
+      let sub = "";
+      if (r.winner === r.dealer){
+        // 莊家贏：全員都按莊家價（並套用連莊倍數）
+        sub = `莊家${fmtMoney(baseDealer*mul)}/平家${fmtMoney(baseDealer*mul)}`;
+      } else {
+        // 莊家沒贏：只有莊家那份套用倍數，其他照平家價
+        sub = `莊家${fmtMoney(baseDealer*mul)}/平家${fmtMoney(baseCommon)}`;
+      }
+
+      return `
+        <div class="card roundCard ${hasYou ? "isYoujin" : ""}">
+          <div class="roundHeader">
+            <div class="roundTitle">
+              <div class="rTop rTop--header">
+                <div class="rTopLeft">
+                  <span class="rIdxPill">#${idx+1}</span>
+                  <span class="rDealer" title="${escapeHtml(players[r.dealer])}">莊家 · ${escapeHtml(players[r.dealer])}</span>
+                </div>
+                <div class="rTopRight">
+                  ${streakText ? `<span class="streakMini">${streakText}</span>` : ""}
+                  ${(r.type==="danyou"||r.type==="shuangyou") ? '<span class="metaTag metaTag--youjin">游金</span>' : ''}
+                </div>
+              </div>
+              <div class="rWinnerOnly">
+                <span class="rWinner">${escapeHtml(players[r.winner])}</span>
+                <span class="rSummary">${r.water}水 · ${escapeHtml(typeLabel(r.type))}${sub ? ` · ${escapeHtml(sub)}` : ""}</span>
+              
+                <div class="roundActions">
+                            <button class="roundDelBtn" onclick="removeRound(${idx})" aria-label="刪除本局" title="刪除本局">
+                                          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="display:block">
+                              <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 7h16"/>
+                                <path d="M10 3h4"/>
+                                <path d="M6 7l1 14h10l1-14"/>
+                                <path d="M10 11v6"/>
+                                <path d="M14 11v6"/>
+                              </g>
+                            </svg>
+                                        </button>
+                          </div>
+                </div>
+
+            </div>
+          </div>
+
+          <div class="mono roundLines roundLinesDesktop">${lines}</div>
+          
+        </div>
+      `;
+    }).join("");
+  }
+
+function renderTotalsAndTransfers(){
+  const { totals, youRecvCount, youRecvAmt, remain, bustedIdx } = computeTotals();
+  const sum = Math.round(totals.reduce((a,b)=>a+b,0)*100)/100;
+
+  const transfers = settleTransfers(totals);
+
+  const byWinner = new Map();
+  transfers.forEach(t=>{
+    if(!byWinner.has(t.to)) byWinner.set(t.to, []);
+    byWinner.get(t.to).push(t);
+  });
+
+  // 多贏家：依贏最多到最少排序，全部先置頂
+  const winners = totals
+    .map((amt,i)=>({i, amt: Math.round(amt*100)/100}))
+    .filter(x=>x.amt > 0.000001)
+    .sort((a,b)=>b.amt-a.amt);
+
+  const hasWinners = winners.length > 0;
+
+  const makeWinnerCard = (i, amt) => {
+    const hasYou = youRecvCount[i] > 0 && Math.abs(youRecvAmt[i]) > 0.000001;
+    const youStr = hasYou
+      ? `<span class="youjinMini"><span class="youjinIcon" aria-hidden="true"></span>+${fmtMoney(youRecvAmt[i])} / ${youRecvCount[i]}次</span>`
+      : `<span>&nbsp;</span>`;
+
+    return `
+      <div class="settleCard is-winner">
+        <div class="settleTop">
+          <div class="settleName">${escapeHtml(players[i])}</div>
+          <div class="settleAmt pos mono">+${fmtMoney(amt)}</div>
+        </div>
+        <div class="settleMeta">${youStr}</div>
+      </div>
+    `;
+  };
+
+  const makeNeutralCard = (i, amt) => {
+    const cls = (amt >= 0) ? "pos" : "neg";
+    const sign = (amt >= 0) ? "+" : "";
+    return `
+      <div class="settleCard">
+        <div class="settleTop">
+          <div class="settleName">${escapeHtml(players[i])}</div>
+          <div class="settleAmt ${cls} mono">${sign}${fmtMoney(amt)}</div>
+        </div>
+        <div class="settleMeta">&nbsp;</div>
+      </div>
+    `;
+  };
+
+  const makeTransferCard = (t) => {
+    return `      <div class="settleCard">
+        <div class="transferLine">
+          <div class="transferWho">${escapeHtml(players[t.from])}</div>
+          <div class="transferAmt mono">-${fmtMoney(t.amount)}</div>
+        </div>
+        <div class="transferLine transferTo">
+          <div class="transferArrow">→</div>
+          <div class="transferWho transferToName">${escapeHtml(players[t.to])}</div>
+        </div>
+      </div>
+    `;
+  };
+
+  const warnHtml = (Math.abs(sum) < 0.01) ? "" : `<div class="warn">警告：總和不為 0（目前 ${fmtMoney(sum)}）</div>`;
+  const settleHtml = (bustedIdx == null) ? "" : `<div class="ok">${escapeHtml(getBustedTaunt(bustedIdx))}</div>`;
+
+  // 沒有任何輸贏：維持 4 張摘要卡
+  if(!hasWinners){
+    const cards = totals.map((amt,i)=>makeNeutralCard(i, Math.round(amt*100)/100)).join("");
+    $("totalsArea").innerHTML = `
+      ${warnHtml}
+      ${settleHtml}
+      <div class="settleGrid">${cards}</div>
+    `;
+    fitAllTotalsNames();
+
+    maybeResetDealerOnBust(bustedIdx);
+
+    syncRecordLock(bustedIdx);
+    $("transfersArea").innerHTML = "";
+    return;
+  }
+
+  // 1) 贏家置頂（全部）
+  const winnerCards = winners.map(w=>makeWinnerCard(w.i, w.amt)).join("");
+
+  // 2) 下面才是輸家：依贏家順序展開每個贏家的收款明細（付款方卡）
+  const loserCardsArr = [];
+  winners.forEach(w=>{
+    const list = (byWinner.get(w.i) || []).slice().sort((a,b)=>b.amount-a.amount);
+    list.forEach(t=>loserCardsArr.push(makeTransferCard(t)));
+  });
+
+  // 若有中立玩家（0），放到最底部（不影響贏家置頂）
+  totals.forEach((amt,i)=>{
+    const a = Math.round(amt*100)/100;
+    if (Math.abs(a) <= 0.000001){
+      loserCardsArr.push(makeNeutralCard(i, a));
+    }
+  });
+
+  $("totalsArea").innerHTML = `
+    ${warnHtml}
+    ${settleHtml}
+    <div class="settleGrid">${winnerCards}</div>
+    ${loserCardsArr.length ? `<div class="settleGrid" style="margin-top:12px">${loserCardsArr.join("")}</div>` : ``}
+  `;
+    fitAllTotalsNames();
+
+
+  maybeResetDealerOnBust(bustedIdx);
+
+    syncRecordLock(bustedIdx);
+  $("transfersArea").innerHTML = "";
+}
+  function renderAll(){
+    syncNextRoundUI();
+    renderRoundList();
+    renderTotalsAndTransfers();
+    try{ renderDealerChip(); }catch(e){}
+  }
+
+  function resetAll(){
+  rounds = [];
+  dealerManualOverride = false;
+  lastBustedIdx = null;
+
+  // 換人/重開：需要重新起莊
+  try{ showDealerHint = true; }catch(e){}
+  try{ setDealerAssigned(false); }catch(e){}
+  renderSelectors();
+
+  // 回到預設：胡牌、游金=無（單游/雙游會在 syncWaterByType 內強制）
+  try{
+    $("typeSel").value = "dao";
+    youForcedByType = false;
+    if ($("youSel")) $("youSel").disabled = false;
+  }catch(e){}
+
+  try{
+    if (typeof setYouValue === "function") setYouValue("none");
+    else if ($("youSel")) $("youSel").value = "none";
+  }catch(e){}
+
+  // 起莊選擇回到 玩家1（但仍需重新起莊）
+  try{
+    if ($("dealerSel")) $("dealerSel").value = "0";
+  }catch(e){}
+
+  // 同步 UI
+  try{ syncWaterByType(); }catch(e){}
+  try{ toggleYouUI(); }catch(e){}
+  try{ updateYouPill(); }catch(e){}
+
+  // 記錄按鈕狀態：尚未設莊 → 鎖住
+  try{ syncRecordLock(null); }catch(e){}
+
+  renderAll();
+}
+
+  $("typeSel").addEventListener("change", syncWaterByType);
+
+  $("waterMinus").addEventListener("click", ()=>{
+    let v = Number($("waterInput").value || 0);
+    v = Math.max(0, v - 1);
+    $("waterInput").value = v;
+    syncWaterByType();
+  });
+  $("waterPlus").addEventListener("click", ()=>{
+    let v = Number($("waterInput").value || 0);
+    v = Math.min(12, v + 1);
+    $("waterInput").value = v;
+    syncWaterByType();
+  });
+  $("waterInput").addEventListener("input", syncWaterByType);
+  $("waterInput").addEventListener("blur", syncWaterByType);
+
+  $("resetBtn").addEventListener("click", resetAll);
+  $("addRoundBtn").addEventListener("click", addRound);
+  $("dealerSel").addEventListener("change", ()=>{
+    if (suppressDealerChange) return;
+    try{ setDealerAssigned(true); }catch(e){}
+
+    // 第一把：連莊固定 1（選誰當莊都算新一段）
+    if (!rounds.length){
+      dealerManualOverride = false;
+      updateStreakBadge(1);
+      return;
+    }
+
+    const st = computeAllRoundsDetailed();
+    const selected = Number($("dealerSel").value || 0);
+
+    if (selected === st.nextDealer){
+      dealerManualOverride = false;
+      updateStreakBadge(st.nextStreak);
+    } else {
+      dealerManualOverride = true;
+      updateStreakBadge(1);
+    }
+    try{ renderNames(); }catch(e){}
+  });
+
+  $("clearRoundsBtn").addEventListener("click", ()=>{
+  rounds = [];
+  dealerManualOverride = false;
+  lastBustedIdx = null;
+
+  // 清空後：需要重新起莊
+  try{ setDealerAssigned(false); }catch(e){}
+  try{ if ($("dealerSel")) $("dealerSel").value = "0"; }catch(e){}
+
+  // 清空後：回到「胡牌」，解除單游/雙游的游金強制
+  try{
+    $("typeSel").value = "dao";
+    youForcedByType = false;
+    if ($("youSel")) $("youSel").disabled = false;
+  }catch(e){}
+
+  // 清空後：游金回到「無」
+  try{
+    if (typeof setYouValue === "function") setYouValue("none");
+    else if ($("youSel")) $("youSel").value = "none";
+  }catch(e){}
+
+  // 同步 UI
+  try{ syncWaterByType(); }catch(e){}
+  try{ toggleYouUI(); }catch(e){}
+  try{ updateYouPill(); }catch(e){}
+
+  // 記錄按鈕狀態：尚未設莊 → 鎖住
+  try{ syncRecordLock(null); }catch(e){}
+
+  renderAll();
+});
+$("youSel").addEventListener("change", toggleYouUI);
+  $("winnerSel").addEventListener("change", ()=>{
+});
+
+  renderNames();
+  renderSelectors();
+  initYouSegmented();
+  updateYouPill();
+  syncWaterByType();
+
+  toggleYouUI();
+  renderAll();
+
+  // v5.11: subtle success feedback on record
+  function flashRecordBtn(){
+    const btn = document.getElementById("addRoundBtn");
+    if(!btn) return;
+    btn.classList.add("success");
+    setTimeout(()=>btn.classList.remove("success"),120);
+  }
+
+
+
+// ===== PATCH vB15: Always auto-adjust title tracking (MutationObserver) =====
+function applyTitleTracking(root=document){
+  root.querySelectorAll('.roundTitle .rMain').forEach(el=>{
+    const winnerEl = el.querySelector('.rWinner');
+    if(!winnerEl) return;
+    const name = (winnerEl.textContent || '').trim();
+    const len = Array.from(name).length;
+
+    // More noticeable but still subtle: longer name => tighter tracking
+    let track = 0.10;   // px default
+    if(len >= 3) track = 0.02;
+    if(len >= 4) track = -0.08;
+    if(len >= 5) track = -0.14;
+    if(len >= 6) track = -0.20;
+
+    el.style.setProperty('--titleTrack', `${track}px`);
+  });
+}
+
+// Run once
+applyTitleTracking();
+
+// Observe round list changes so it always applies after re-render
+(function(){
+  const target = document.querySelector('#roundList') || document.querySelector('.roundList') || document.body;
+  const obs = new MutationObserver(()=>applyTitleTracking());
+  obs.observe(target, {childList:true, subtree:true});
+})();
+
+
+
+
+// ===== PATCH v6.2: Auto-size winner name for rWinnerOnly (short names big, long names contained) =====
+function applyWinnerSizing(root=document){
+  root.querySelectorAll('.rWinnerOnly .rWinner').forEach(el=>{
+    const name = (el.textContent || '').trim();
+    const len = Array.from(name).length;
+    // Another 2 steps smaller: keep short names punchy, keep long names contained
+    let fs = 34;   // desktop-ish
+    let fsm = 28;  // mobile-ish
+
+    if(len <= 1){ fs = 44; fsm = 36; }
+    else if(len === 2){ fs = 40; fsm = 34; }
+    else if(len === 3){ fs = 36; fsm = 30; }
+    else if(len === 4){ fs = 34; fsm = 28; }
+    else if(len === 5){ fs = 32; fsm = 26; }
+    else if(len === 6){ fs = 30; fsm = 24; }
+    else if(len <= 9){ fs = 26; fsm = 22; }
+    else { fs = 24; fsm = 20; }
+    el.style.setProperty('--winnerFs', `${fs}px`);
+    el.style.setProperty('--winnerFsM', `${fsm}px`);
+  });
+}
+
+// Run once
+applyWinnerSizing();
+
+// Observe round list changes so it always applies after re-render
+(function(){
+  const target = document.querySelector('#roundList') || document.querySelector('.roundList') || document.body;
+  const obs = new MutationObserver(()=>applyWinnerSizing());
+  obs.observe(target, {childList:true, subtree:true});
+})();
+
+
+// ===== Mobile preview toggle (desktop) =====
+(function(){
+  const KEY = "mahjong_mobile_preview";
+  const btn = document.getElementById("mobilePreviewBtn");
+  if(!btn) return;
+
+  function apply(on){
+    document.body.classList.toggle("mobile-preview", !!on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.textContent = on ? "🖥️桌機預覽" : "📱手機預覽";
+    try{ localStorage.setItem(KEY, on ? "1" : "0"); }catch(e){}
+    try{
+      requestAnimationFrame(function(){
+        if (typeof fitAllTotalsNames === "function") fitAllTotalsNames();
+      });
+    }catch(e){}
+  }
+
+  btn.addEventListener("click", function(){
+    apply(!document.body.classList.contains("mobile-preview"));
+  });
+
+  let saved = null;
+  try{ saved = localStorage.getItem(KEY); }catch(e){}
+  if(saved === "1") apply(true);
+})();
+
+</script>
+</body>
+</html>
