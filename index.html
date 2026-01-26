@@ -1724,28 +1724,97 @@ input{
   min-height:16px;
 }
 
-/* Small gold badge (for youjin amount) */
+/* Small red packet badge (youjin hongbao, extra - not principal) */
 .youjinMini{
   display:inline-flex;
   align-items:center;
   gap:8px;
   padding:6px 10px;
   border-radius:999px;
-  border:1px solid rgba(255,210,64,.26);
-  background: rgba(255,210,64,.08);
-  color: rgba(231,238,252,.85);
-  font-weight:800;
+  border:1px solid rgba(255,77,79,.28);
+  background: rgba(255,77,79,.10);
+  color: rgba(231,238,252,.88);
+  font-weight:850;
 }
 .youjinIcon{
   width:14px;
   height:14px;
   display:inline-block;
-  background:#FFD240;
-  clip-path: polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%);
+  border-radius:3px;
+  position:relative;
+  background: linear-gradient(180deg, rgba(255,77,79,.98), rgba(217,54,62,.98));
   box-shadow:
-    0 0 0 1px rgba(255,210,64,.22) inset,
-    0 6px 14px rgba(255,210,64,.14);
+    0 0 0 1px rgba(255,77,79,.22) inset,
+    0 6px 14px rgba(255,77,79,.12);
 }
+.youjinIcon::before{
+  content:"";
+  position:absolute;
+  left:1px;
+  right:1px;
+  top:5px;
+  height:3px;
+  border-radius:2px;
+  background: rgba(255,210,64,.95);
+  box-shadow: 0 0 0 1px rgba(255,210,64,.25) inset;
+}
+.youjinIcon::after{
+  content:"";
+  position:absolute;
+  width:5px;
+  height:5px;
+  border-radius:999px;
+  left:4.5px;
+  top:3.8px;
+  background: rgba(255,210,64,.95);
+  box-shadow: 0 0 0 1px rgba(255,210,64,.30) inset;
+}
+
+/* Section title for hongbao transfers */
+.hongbaoTitle{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:14px 0 8px;
+  color: rgba(231,238,252,.55);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.2px;
+}
+.hongbaoBadge{
+  width:18px;
+  height:18px;
+  flex:0 0 auto;
+  border-radius:4px;
+  position:relative;
+  background: linear-gradient(180deg, rgba(255,77,79,.98), rgba(217,54,62,.98));
+  box-shadow:
+    0 0 0 1px rgba(255,77,79,.22) inset,
+    0 8px 18px rgba(255,77,79,.14);
+}
+.hongbaoBadge::before{
+  content:"";
+  position:absolute;
+  left:2px;
+  right:2px;
+  top:7px;
+  height:3px;
+  border-radius:2px;
+  background: rgba(255,210,64,.95);
+  box-shadow: 0 0 0 1px rgba(255,210,64,.25) inset;
+}
+.hongbaoBadge::after{
+  content:"";
+  position:absolute;
+  width:6px;
+  height:6px;
+  border-radius:999px;
+  left:6px;
+  top:5.6px;
+  background: rgba(255,210,64,.95);
+  box-shadow: 0 0 0 1px rgba(255,210,64,.30) inset;
+}
+
 
 /* Transfer card */
 .transferLine{
@@ -4033,6 +4102,11 @@ function computeAllRoundsDetailed(){
   const youRecvCount = Array(n).fill(0);
   const youRecvAmt = Array(n).fill(0);
 
+  // 游金紅包：收/付統計 + 轉帳明細
+  const youPayAmt = Array(n).fill(0);
+  const youPayCount = Array(n).fill(0);
+  const youTransfers = [];
+
   const detailedRounds = [];
 
   // 對「下一把」的預期（用於判斷手動改莊 -> 視為新一段）
@@ -4096,38 +4170,40 @@ function computeAllRoundsDetailed(){
       });
     }
 
-    // 游金：固定由贏家收（10），不套用連莊倍數
-    if (r0.youSelected){
-      const youWho = r0.winner;
-      const youAmt = 10;
-      let gotAny = false;
+// 游金紅包：每位非贏家額外給贏家 10
+if (r0.youSelected){
+  const youWho = r0.winner;
+  const youAmt = 10;
+  let gotAny = false;
 
-      for (let i = 0; i < n; i++){
-        if (i === youWho) continue;
+  for (let i = 0; i < n; i++){
+    if (i === youWho) continue;
 
-        const pay = Math.min(youAmt, remain[i]);
-        if (pay <= 0) continue;
+    const pay = youAmt; // 額外紅包，不從本金扣
+    gotAny = true;
 
-        remain[i] -= pay;
-        remain[youWho] += pay;
-        gotAny = true;
+    const raw = `游金紅包 +${youAmt}`;
 
-        let raw = `游金 +${youAmt}`;
-        if (pay < youAmt) raw += `（封頂 ${pay}）`;
+    lines.push({
+      from: i,
+      to: youWho,
+      amount: pay,
+      raw,
+      role: "游金"
+    });
 
-        lines.push({
-          from: i,
-          to: youWho,
-          amount: pay,
-          raw,
-          role: "游金"
-        });
+    // 額外紅包明細（用於總計下方彙總顯示）
+    youTransfers.push({ from: i, to: youWho, amount: pay });
 
-        youRecvAmt[youWho] += pay;
-      }
+    // 收/付統計（額外，不影響 totals）
+    youRecvAmt[youWho] += pay;
+    youPayAmt[i] += pay;
+    youPayCount[i] += 1;
+  }
 
-      if (gotAny) youRecvCount[youWho] += 1;
-    }
+  if (gotAny) youRecvCount[youWho] += 1;
+}
+
 
     if (bustedIdx == null){
       const idx0 = remain.findIndex(v => v <= 0);
@@ -4154,7 +4230,7 @@ function computeAllRoundsDetailed(){
   const nextDealer = rounds.length ? expectedDealer : Number((document.getElementById("dealerSel") && document.getElementById("dealerSel").value) ? document.getElementById("dealerSel").value : 0);
   const nextStreak = rounds.length ? expectedStreak : 1;
 
-  return { detailedRounds, totals, remain, bustedIdx, nextDealer, nextStreak, youRecvCount, youRecvAmt };
+  return { detailedRounds, totals, remain, bustedIdx, nextDealer, nextStreak, youRecvCount, youRecvAmt, youPayAmt, youPayCount, youTransfers };
 }
 
 function simulateGameState(){
@@ -4967,7 +5043,10 @@ function removeRound(idx){
     youRecvCount: st.youRecvCount,
     youRecvAmt: st.youRecvAmt,
     remain: st.remain,
-    bustedIdx: st.bustedIdx
+    bustedIdx: st.bustedIdx,
+    youPayAmt: st.youPayAmt,
+    youPayCount: st.youPayCount,
+    youTransfers: st.youTransfers
   };
 }
 
@@ -4992,6 +5071,28 @@ function settleTransfers(totals){
     }
     return res;
   }
+
+// 彙總轉帳：把多筆 (from -> to) 合併成一筆（用於游金紅包等明細）
+function aggregatePairTransfers(list){
+  const map = new Map();
+  (list || []).forEach(t=>{
+    const from = Number(t.from);
+    const to = Number(t.to);
+    const amt = Number(t.amount) || 0;
+    if (!isFinite(from) || !isFinite(to) || !isFinite(amt) || Math.abs(amt) <= 0.000001) return;
+    const key = from + ">" + to;
+    map.set(key, (map.get(key) || 0) + amt);
+  });
+  const res = [];
+  map.forEach((amount, key)=>{
+    const parts = key.split(">");
+    const from = Number(parts[0]);
+    const to = Number(parts[1]);
+    res.push({ from, to, amount: Math.round(amount * 100) / 100 });
+  });
+  return res;
+}
+
 
   function badgeIf(name, should){
     return should ? `${name}<span class="badge">🟡游金</span>` : name;
@@ -5081,7 +5182,7 @@ const streakText = (carry > 0) ? `連${carry}` : "";
   }
 
 function renderTotalsAndTransfers(){
-  const { totals, youRecvCount, youRecvAmt, remain, bustedIdx } = computeTotals();
+  const { totals, youRecvCount, youRecvAmt, remain, bustedIdx, youTransfers } = computeTotals();
   const sum = Math.round(totals.reduce((a,b)=>a+b,0)*100)/100;
 
   const transfers = settleTransfers(totals);
@@ -5100,10 +5201,22 @@ function renderTotalsAndTransfers(){
 
   const hasWinners = winners.length > 0;
 
+  // 游金紅包：額外給付，不算本金
+  const hbAgg = aggregatePairTransfers(youTransfers || []);
+  const winOrder = new Map();
+  winners.forEach((w,idx)=>winOrder.set(w.i, idx));
+  const hbSorted = hbAgg.slice().sort((a,b)=>{
+    const oa = winOrder.has(a.to) ? winOrder.get(a.to) : 999;
+    const ob = winOrder.has(b.to) ? winOrder.get(b.to) : 999;
+    if (oa !== ob) return oa - ob;
+    if (a.to !== b.to) return a.to - b.to;
+    return b.amount - a.amount;
+  });
+
   const makeWinnerCard = (i, amt) => {
     const hasYou = youRecvCount[i] > 0 && Math.abs(youRecvAmt[i]) > 0.000001;
     const youStr = hasYou
-      ? `<span class="youjinMini"><span class="youjinIcon" aria-hidden="true"></span>+${fmtMoney(youRecvAmt[i])} / ${youRecvCount[i]}次</span>`
+      ? `<span class="youjinMini"><span class="youjinIcon" aria-hidden="true"></span>紅包 +${fmtMoney(youRecvAmt[i])} / ${youRecvCount[i]}次</span>`
       : `<span>&nbsp;</span>`;
 
     return `
@@ -5145,6 +5258,13 @@ function renderTotalsAndTransfers(){
     `;
   };
 
+
+
+const hbHtml = hbSorted.length ? `
+  <div class="hongbaoTitle"><span class="hongbaoBadge" aria-hidden="true"></span><span>游金紅包</span></div>
+  <div class="settleGrid">${hbSorted.map(makeTransferCard).join("")}</div>
+` : ``;
+
   const warnHtml = (Math.abs(sum) < 0.01) ? "" : `<div class="warn">警告：總和不為 0（目前 ${fmtMoney(sum)}）</div>`;
   const settleHtml = (bustedIdx == null) ? "" : `<div class="ok">${escapeHtml(getBustedTaunt(bustedIdx))}</div>`;
 
@@ -5155,6 +5275,7 @@ function renderTotalsAndTransfers(){
       ${warnHtml}
       ${settleHtml}
       <div class="settleGrid">${cards}</div>
+      ${hbHtml}
     `;
     fitAllTotalsNames();
 
@@ -5188,6 +5309,7 @@ function renderTotalsAndTransfers(){
     ${settleHtml}
     <div class="settleGrid">${winnerCards}</div>
     ${loserCardsArr.length ? `<div class="settleGrid" style="margin-top:12px">${loserCardsArr.join("")}</div>` : ``}
+    ${hbHtml}
   `;
     fitAllTotalsNames();
 
