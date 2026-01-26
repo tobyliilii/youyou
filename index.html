@@ -1815,6 +1815,87 @@ input{
   box-shadow: 0 0 0 1px rgba(255,210,64,.30) inset;
 }
 
+/* ===== 戰績榜 ===== */
+#battleList .battleEntry:first-child{ margin-top:0; }
+
+.battleEntry{
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;
+  padding:14px 16px;
+  margin-top:12px;
+  background: rgba(255,255,255,.02);
+  box-shadow: var(--shadow-small);
+}
+.battleMain{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+}
+.battleText{
+  flex:1;
+  min-width:0;
+  font-weight:900;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+@media (max-width:520px){
+  .battleText{
+    white-space:normal;
+    overflow:visible;
+  }
+}
+.battleAmt{
+  font-weight:950;
+  font-size:18px;
+  color: rgba(61,220,132,.95);
+  white-space:nowrap;
+}
+.battleCum{
+  margin-top:6px;
+  font-size:12px;
+  color: rgba(231,238,252,.55);
+  line-height:1.35;
+}
+.battleSectionTitle{
+  margin:14px 0 8px;
+  color: rgba(231,238,252,.65);
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.2px;
+}
+.battleSettleList{
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;
+  overflow:hidden;
+}
+.battleSettleRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  border-bottom:1px solid var(--tableLine);
+}
+.battleSettleRow:last-child{ border-bottom:none; }
+.battlePay{ color: rgba(231,238,252,.90); }
+.battleSettleAmt{ font-weight:900; }
+
+.battleHongbaoLine{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:12px;
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;
+  background: rgba(255,77,79,.06);
+}
+.battleHongbaoText{ color: rgba(231,238,252,.90); }
+
+
 
 /* Transfer card */
 .transferLine{
@@ -4005,6 +4086,15 @@ input,select,.stepper,.segmented{
       <div id="transfersArea" style="display:none"></div>
     </div>
 
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div><strong>戰績榜</strong></div>
+      </div>
+      <div id="battleList" style="margin-top:10px;"></div>
+      <div id="battleSummary" style="margin-top:12px;"></div>
+    </div>
+
+
   <!-- Name editor modal (seat map) -->
   <div id="nameModal" class="nameModal" aria-hidden="true">
     <div class="nameModalOverlay" data-close="1"></div>
@@ -4293,6 +4383,7 @@ function syncRecordLock(bustedIdx){
 }
 
   let rounds = [];
+  let battleGames = []; // 大局戰績（按「清空全部局數」時記一筆）
   let youForcedByType = false;
 
   // 連莊：是否手動改過「下一把莊家」
@@ -4312,6 +4403,139 @@ function syncRecordLock(bustedIdx){
     const n = Math.round((x + Number.EPSILON) * 100) / 100;
     return n.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2});
   }
+
+  // ===== 戰績榜（只在「清空全部局數」時記一筆大局結算） =====
+  function round2(n){
+    const x = Number(n) || 0;
+    return Math.round((x + Number.EPSILON) * 100) / 100;
+  }
+
+  function battleSnapshotNow(){
+    const st = computeTotals();
+    const delta = (st.totals || []).map(round2);
+
+    const recv = st.youRecvAmt || [];
+    const pay  = st.youPayAmt || [];
+    const hbDelta = delta.map((_,i)=> round2((Number(recv[i])||0) - (Number(pay[i])||0)));
+
+    const eps = 0.000001;
+    const winners = [];
+    const losers = [];
+    let amount = 0;
+
+    delta.forEach((v,i)=>{
+      if (v > eps){ winners.push(i); amount += v; }
+      else if (v < -eps){ losers.push(i); }
+    });
+
+    return {
+      delta,
+      hbDelta,
+      winners,
+      losers,
+      amount: round2(amount),
+      bustedIdx: st.bustedIdx
+    };
+  }
+
+  function renderBattleboard(){
+    const listEl = document.getElementById("battleList");
+    const sumEl  = document.getElementById("battleSummary");
+    if (!listEl || !sumEl) return;
+
+    if (!battleGames.length){
+      listEl.innerHTML = `<div class="muted">尚無戰績。</div>`;
+      sumEl.innerHTML = "";
+      return;
+    }
+
+    const cum = Array(players.length).fill(0);
+
+    listEl.innerHTML = battleGames.map((g, idx)=>{
+      for (let i=0;i<cum.length;i++){
+        cum[i] = round2(cum[i] + (Number((g.delta||[])[i]) || 0));
+      }
+
+      const losers = (g.losers || []);
+      const winners = (g.winners || []);
+      const loserTxt = losers.length ? losers.map(i=>escapeHtml(players[i])).join("/") : "—";
+      const winnerTxt = winners.length ? winners.map(i=>escapeHtml(players[i])).join("/") : "—";
+
+      const mainLeft = `#${idx+1}  ${loserTxt} → ${winnerTxt}`;
+      const mainAmt  = `+${fmtMoney(Number(g.amount)||0)}`;
+
+      const cumLine = "計：" + cum.map((v,i)=>{
+        const sign = (v > 0.000001) ? "+" : "";
+        return `${escapeHtml(players[i])} ${sign}${fmtMoney(v)}`;
+      }).join("｜");
+
+      return `
+        <div class="battleEntry">
+          <div class="battleMain">
+            <div class="battleText">${mainLeft}</div>
+            <div class="battleAmt mono">${mainAmt}</div>
+          </div>
+          <div class="battleCum mono">${cumLine}</div>
+        </div>
+      `;
+    }).join("");
+
+    // 今晚累計（本金 / 紅包）
+    const night = Array(players.length).fill(0);
+    const nightHb = Array(players.length).fill(0);
+
+    battleGames.forEach(g=>{
+      for (let i=0;i<players.length;i++){
+        night[i] = round2(night[i] + (Number((g.delta||[])[i]) || 0));
+        nightHb[i] = round2(nightHb[i] + (Number((g.hbDelta||[])[i]) || 0));
+      }
+    });
+
+    const settle = settleTransfers(night);
+    const settleRows = settle.length
+      ? settle.map(t=>`
+          <div class="battleSettleRow">
+            <span class="battlePay">${escapeHtml(players[t.from])} → ${escapeHtml(players[t.to])}</span>
+            <span class="battleSettleAmt mono">${fmtMoney(t.amount)}</span>
+          </div>
+        `).join("")
+      : `<div class="muted" style="padding:10px 12px;">無需清算</div>`;
+
+    const hbSettle = settleTransfers(nightHb);
+    const hbText = hbSettle.length
+      ? hbSettle.map(t=>`${escapeHtml(players[t.from])} → ${escapeHtml(players[t.to])} ${fmtMoney(t.amount)}`).join("、")
+      : "無需清算";
+
+    sumEl.innerHTML = `
+      <div class="battleSectionTitle">今晚清算</div>
+      <div class="battleSettleList">${settleRows}</div>
+      <div class="battleHongbaoLine">
+        <span class="hongbaoBadge" aria-hidden="true"></span>
+        <div class="battleHongbaoText mono">紅包清算：${hbText}</div>
+      </div>
+    `;
+  }
+
+  function recordBattleOnClear(){
+    try{
+      const snap = battleSnapshotNow();
+      const anyPrincipal = (snap.amount || 0) > 0.000001;
+      const anyHongbao = (snap.hbDelta || []).some(v=>Math.abs(Number(v)||0) > 0.000001);
+
+      // 沒有任何局/沒有任何變動：不寫入
+      if (!rounds.length && !anyPrincipal && !anyHongbao) return;
+
+      // 基本上按清空就是「大局結束」（你們通常是有人爆本金），這裡直接落筆
+      battleGames.push({
+        delta: snap.delta,
+        hbDelta: snap.hbDelta,
+        winners: snap.winners,
+        losers: snap.losers,
+        amount: snap.amount
+      });
+    }catch(e){}
+  }
+
 
   // ===== Auto-fit long names in the totals (mobile) =====
   function fitTextToWidth(el, maxPx, minPx){
@@ -5323,6 +5547,7 @@ const hbHtml = hbSorted.length ? `
     syncNextRoundUI();
     renderRoundList();
     renderTotalsAndTransfers();
+    try{ renderBattleboard(); }catch(e){}
     try{ renderDealerChip(); }catch(e){}
   }
 
@@ -5416,6 +5641,8 @@ const hbHtml = hbSorted.length ? `
   });
 
   $("clearRoundsBtn").addEventListener("click", ()=>{
+  recordBattleOnClear();
+
   rounds = [];
   dealerManualOverride = false;
   lastBustedIdx = null;
