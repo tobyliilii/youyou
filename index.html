@@ -586,6 +586,33 @@ input{
 /* Since we removed 紅包欄位, keep second row strictly single-line */
 #youWhoWrap{ min-width:170px !important; }
 
+.dealerNowLine{
+  margin-top:8px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:13px;
+  line-height:1;
+}
+.dealerNowTag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,215,120,.38);
+  background:rgba(255,215,120,.08);
+  color:rgba(255,215,120,.95);
+  letter-spacing:.5px;
+  white-space:nowrap;
+}
+.dealerNowName{
+  color:rgba(231,238,252,.92);
+  font-weight:650;
+  white-space:nowrap;
+}
+
+
 
 /* ===== v5.1: align with agreed visual ===== */
 
@@ -3109,26 +3136,47 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
 }
 .inlineNameInput::placeholder{ color: rgba(255,255,255,.22); }
 
+
+
+/* Seat wind (東南西北) */
+.seatWindTag{
+  position:absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .5px;
+  color: rgba(231,238,252,.88);
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 6px 16px rgba(0,0,0,.18);
+  pointer-events:none;
+}
+
 .playerCard.isDealer{
-  border-color: rgba(245,210,74,.28) !important;
-  box-shadow: 0 0 0 2px rgba(245,210,74,.18) inset !important;
+  border-color: rgba(245,210,74,.72) !important;
+  background: linear-gradient(180deg, rgba(245,210,74,.14), rgba(245,210,74,.05)) !important;
+  box-shadow:
+    0 0 0 2px rgba(245,210,74,.26) inset,
+    0 10px 22px rgba(245,210,74,.10) !important;
+}
+
+.playerCard.isDealer .seatWindTag{
+  background: rgba(245,210,74,.16);
+  border-color: rgba(245,210,74,.32);
+  color: rgba(255,245,214,.95);
 }
 
 .playerCard.isDealer::after{
-  content:"";
-  position:absolute;
-  top: 18px;
-  right: 18px;
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%,
-    rgba(255,255,255,.95),
-    rgba(245,210,74,.98) 38%,
-    rgba(245,210,74,.82) 66%,
-    rgba(245,210,74,.25) 100%
-  );
-  box-shadow: 0 0 0 2px rgba(245,210,74,.18);
+  content:none;
 }
 
 /* Center the reset button under the 2x2 grid */
@@ -4009,7 +4057,7 @@ input,select,.stepper,.segmented{
 
             <div class="winnerGroup">
               <div class="figLabel">贏家</div>
-              <div class="winnerWrap">
+<div class="winnerWrap">
                 <select id="winnerSel" class="figWinner">
                   <option value="0">麻友1</option>
                   <option value="1">麻友2</option>
@@ -4142,6 +4190,9 @@ input,select,.stepper,.segmented{
 
   let players = ["麻友1","麻友2","麻友3","麻友4"];
 
+  // 座位固定：麻友1=東、麻友2=南、麻友3=西、麻友4=北
+  const SEAT_WIND = ["東","南","西","北"];
+
 // ===== Random "busted" taunts (when someone drops to 0 or below) =====
 // 只輸出「{name}輸掉XXXX」這種短句（不含「這局」）
 const BUST_TAUNT_SUFFIXES = [
@@ -4173,14 +4224,11 @@ function getBustedTaunt(idx){
 
 const START_STACK = 100; // 每局每人起始 100
 
-// 連莊規則：逆時針當莊（以座位佈局 A(top)=0, B(left)=1, C(right)=2, D(bottom)=3）
-// 逆時針順序：A(0) → B(1) → D(3) → C(2) → A(0)
-const CCW_ORDER = [0, 1, 3, 2];
+// 連莊規則：逆時針當莊（固定座位：東(0) → 南(1) → 西(2) → 北(3) → 東...）
+// 你們已固定座位，所以直接依索引順序輪即可。
 function nextDealerCCW(d){
-  const n = CCW_ORDER.length;
-  const i = CCW_ORDER.indexOf(d);
-  if (i === -1) return (Number(d) + 1) % (players.length || 4);
-  return CCW_ORDER[(i + 1) % n];
+  const n = (players && players.length) ? players.length : 4;
+  return (Number(d) + 1) % n;
 }
 
 
@@ -4354,7 +4402,7 @@ function maybeResetDealerOnBust(bustedIdx){
       const dealerSel = document.getElementById("dealerSel");
       if (dealerSel) dealerSel.value = "0";
     }catch(e){}
-    try{ setDealerAssigned(false); }catch(e){}
+    try{ setDealerAssigned(true); }catch(e){}
   }
 }
 
@@ -4373,11 +4421,7 @@ function syncRecordLock(bustedIdx){
     setRoundLocked(true, `本局已結算：${getBustedTaunt(bustedIdx)}`);
     return;
   }
-  if (!dealerAssigned){
-    // Soft lock: keep clickable, but prompt user to set dealer
-    setRoundSoftLocked(true, "請先長按任一玩家，設定起莊");
-    return;
-  }
+  // 起莊固定從東開始，不需要手動設莊
   setRoundSoftLocked(false);
   setRoundLocked(false);
 }
@@ -4391,10 +4435,10 @@ function syncRecordLock(bustedIdx){
   let suppressDealerChange = false;
 
   // 方案B：是否已『設莊』（未設莊時顯示引導）
-  let dealerAssigned = false;
+  let dealerAssigned = true;
 
 
-  let showDealerHint = true;
+  let showDealerHint = false;
 
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -4599,8 +4643,12 @@ function syncRecordLock(bustedIdx){
     requestAnimationFrame(fitAllTotalsNames);
   }, 120));
 
-  function buildOptions(sel){
-    sel.innerHTML = players.map((p,i)=>`<option value="${i}">${escapeHtml(p)}</option>`).join("");
+  function buildOptions(sel, showWind=true){
+    sel.innerHTML = players.map((p,i)=>{
+      const w = SEAT_WIND[i] || "";
+      const label = (showWind && w) ? (w + " " + p) : p;
+      return `<option value="${i}">${escapeHtml(label)}</option>`;
+    }).join("");
   }
 
   function streakMultiplier(streak){
@@ -4653,7 +4701,29 @@ function syncRecordLock(bustedIdx){
       updateStreakBadge(1);
     }
   }
-  function formatSeatName(name){
+  
+function updateDealerNowUI(){
+  try{
+    const el = document.getElementById("dealerNowName");
+    const sel = document.getElementById("dealerSel");
+    if (!el || !sel) return;
+    const idx = Number(sel.value || 0);
+    el.textContent = (players && players[idx]) ? players[idx] : `麻友${idx+1}`;
+  }catch(e){}
+}
+
+function updateDealerMarkOnly(){
+  try{
+    const sel = $("dealerSel");
+    const dealerIdx = sel ? Number(sel.value || 0) : 0;
+    document.querySelectorAll('.playerCard[data-seat]').forEach(btn=>{
+      const idx = Number(btn.dataset.seat);
+      btn.classList.toggle('isDealer', !!dealerAssigned && idx === dealerIdx);
+    });
+  }catch(e){}
+}
+
+function formatSeatName(name){
     const raw = String(name || "").trim();
     return raw ? escapeHtml(raw) : "—";
   }
@@ -4892,20 +4962,24 @@ function syncRecordLock(bustedIdx){
       root.innerHTML = `
         <div class="playerGrid" id="playerGrid" aria-label="麻友">
           <div class="playerCard" data-seat="0" role="button" tabindex="0" aria-label="麻友 1">
+            <span class="seatWindTag">東</span>
             <div class="playerMain" id="seatName0"></div>
-            <div class="playerHint">（長按起莊）</div>
+            <div class="playerHint">（長按可改莊）</div>
           </div>
           <div class="playerCard" data-seat="1" role="button" tabindex="0" aria-label="麻友 2">
+            <span class="seatWindTag">南</span>
             <div class="playerMain" id="seatName1"></div>
-            <div class="playerHint">（長按起莊）</div>
+            <div class="playerHint">（長按可改莊）</div>
           </div>
           <div class="playerCard" data-seat="2" role="button" tabindex="0" aria-label="麻友 3">
+            <span class="seatWindTag">西</span>
             <div class="playerMain" id="seatName2"></div>
-            <div class="playerHint">（長按起莊）</div>
+            <div class="playerHint">（長按可改莊）</div>
           </div>
           <div class="playerCard" data-seat="3" role="button" tabindex="0" aria-label="麻友 4">
+            <span class="seatWindTag">北</span>
             <div class="playerMain" id="seatName3"></div>
-            <div class="playerHint">（長按起莊）</div>
+            <div class="playerHint">（長按可改莊）</div>
           </div>
         </div>
       `;
@@ -5105,8 +5179,8 @@ function syncRecordLock(bustedIdx){
     const oldDealer = (dealerSel && dealerSel.value != null) ? dealerSel.value : "0";
     const oldWinner = (winnerSel && winnerSel.value != null) ? winnerSel.value : "0";
 
-    buildOptions(dealerSel);
-    buildOptions(winnerSel);
+    buildOptions(dealerSel, true);
+    buildOptions(winnerSel, false);
 
     // 盡量保留目前選擇（避免 iOS 檔案預覽或重新渲染時變成空白）
     dealerSel.value = (dealerSel.querySelector(`option[value="${oldDealer}"]`) ? oldDealer : "0");
@@ -5198,7 +5272,22 @@ function syncRecordLock(bustedIdx){
   }
 
 
-  const dealer = Number($("dealerSel").value);
+    // 本把莊家：以「預期下一把莊」為準（避免 UI 同步延遲）
+  let dealer = Number($("dealerSel").value);
+  try{
+    if (rounds.length && !dealerManualOverride){
+      const stAuto = computeAllRoundsDetailed();
+      if (stAuto && stAuto.nextDealer != null){
+        dealer = Number(stAuto.nextDealer);
+        // 同步隱藏 select，確保本局寫入與 UI 一致
+        if (String($("dealerSel").value) !== String(dealer)){
+          suppressDealerChange = true;
+          $("dealerSel").value = String(dealer);
+          suppressDealerChange = false;
+        }
+      }
+    }
+  }catch(e){}
   const winner = Number($("winnerSel").value);
   const type = $("typeSel").value;
   const water = Number($("waterInput").value);
@@ -5346,8 +5435,9 @@ function aggregatePairTransfers(list){
       const mul = r.multiplier || 1;
 
       const carry = Math.max(0, (r.dealerStreak || 1) - 1);
-// 起莊不顯示；只有連莊才顯示：連1、連2…
-const streakText = (carry > 0) ? `連${carry}` : "";
+      // 連莊徽章只在「莊家有贏」的那把顯示，避免非莊家贏牌時也出現連莊。
+      // 起莊不顯示；只有連莊才顯示：連1、連2…
+      const streakText = (r.winner === r.dealer && carry > 0) ? `連${carry}` : "";
 
       let sub = "";
       if (r.winner === r.dealer){
@@ -5545,6 +5635,8 @@ const hbHtml = hbSorted.length ? `
 }
   function renderAll(){
     syncNextRoundUI();
+    updateDealerMarkOnly();
+    updateDealerNowUI();
     renderRoundList();
     renderTotalsAndTransfers();
     try{ renderBattleboard(); }catch(e){}
@@ -5566,7 +5658,7 @@ const hbHtml = hbSorted.length ? `
 
   // 換人/重開：需要重新起莊
   try{ showDealerHint = true; }catch(e){}
-  try{ setDealerAssigned(false); }catch(e){}
+  try{ setDealerAssigned(true); }catch(e){}
   renderSelectors();
 
   // 回到預設：胡牌、游金=無（單游/雙游會在 syncWaterByType 內強制）
@@ -5648,7 +5740,7 @@ const hbHtml = hbSorted.length ? `
   lastBustedIdx = null;
 
   // 清空後：需要重新起莊
-  try{ setDealerAssigned(false); }catch(e){}
+  try{ setDealerAssigned(true); }catch(e){}
   try{ if ($("dealerSel")) $("dealerSel").value = "0"; }catch(e){}
 
   // 清空後：回到「胡牌」，解除單游/雙游的游金強制
