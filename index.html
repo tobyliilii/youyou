@@ -4641,19 +4641,56 @@ function syncRecordLock(bustedIdx){
           if (t){ clearTimeout(t); t = null; }
         };
 
-        btn.addEventListener("pointerdown", (e)=>{
+        // Press handlers: support PointerEvent + older touch/mouse; don't preventDefault (it can kill click on iOS)
+        let pressActive = false;
+        let pressType = null;
+        let pressPointerId = null;
+
+        const startPress = (e)=>{
           if (btn.classList.contains("is-editing")) return;
-          if (e.pointerType === "mouse" && e.button !== 0) return;
-          // iOS/Android: prevent long-press selecting text / callout
-          if (e.pointerType !== "mouse"){ try{ e.preventDefault(); }catch(err){} }
+
+          // Guard against duplicate touch+pointer sequences
+          if (pressActive) return;
+
+          // Left click only
+          if ((e.type === "mousedown" || e.pointerType === "mouse") && e.button !== 0) return;
+
+          pressActive = true;
+          pressType = (e.type && e.type.startsWith("touch")) ? "touch" : ((e.type && e.type.startsWith("mouse")) ? "mouse" : "pointer");
+          pressPointerId = (e && e.pointerId != null) ? e.pointerId : null;
+
           start(e);
-        });
+        };
 
+        const endPress = (e)=>{
+          if (!pressActive) return;
+
+          // If a different pointer id bubbles in, ignore it
+          if (pressType === "pointer" && pressPointerId != null && e && e.pointerId != null && e.pointerId !== pressPointerId) return;
+
+          pressActive = false;
+          pressType = null;
+          pressPointerId = null;
+
+          cancel();
+        };
+
+        btn.addEventListener("pointerdown", startPress);
+        btn.addEventListener("pointerup", endPress);
+        btn.addEventListener("pointercancel", endPress);
+        btn.addEventListener("pointerleave", endPress);
+
+        // Fallbacks: some in-app browsers/WebViews are flaky with PointerEvent
+        btn.addEventListener("touchstart", startPress, { passive:true });
+        btn.addEventListener("touchend", endPress);
+        btn.addEventListener("touchcancel", endPress);
+
+        btn.addEventListener("mousedown", startPress);
+        btn.addEventListener("mouseup", endPress);
+        btn.addEventListener("mouseleave", endPress);
+
+        // Prevent iOS context menu on long-press
         btn.addEventListener("contextmenu", (e)=>{ e.preventDefault(); });
-
-        btn.addEventListener("pointerup", cancel);
-        btn.addEventListener("pointercancel", cancel);
-        btn.addEventListener("pointerleave", cancel);
 
         btn.addEventListener("click", (e)=>{
           if (btn.classList.contains("is-editing")) return;
