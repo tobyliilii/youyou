@@ -4052,6 +4052,65 @@ input,select,.stepper,.segmented{
 .cardPanel[aria-label="誰游"] .panelHeader{
   margin-bottom:16px !important;
 }
+
+
+/* ===== vXX: 本金選擇（A：不預設） ===== */
+.bankBar{
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+}
+.bankRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.bankLabel{
+  font-size:13px;
+  font-weight:850;
+  color: rgba(231,238,252,.78);
+}
+.bankChips{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.bankChip{
+  padding: 7px 12px;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+  user-select:none;
+}
+.bankChip.is-selected{
+  border-color: rgba(78,123,255,.65);
+  background: rgba(78,123,255,.18);
+  color: rgba(231,238,252,.96);
+}
+.bankBar.is-locked{
+  opacity:.55;
+}
+.bankBar.is-locked .bankChip{
+  cursor:not-allowed;
+}
+
+/* ===== vXX+: 本金獨立卡片樣式 ===== */
+.cardPanel[aria-label="本金"] .panelSection{
+  padding:16px 14px 16px !important;
+}
+.cardPanel[aria-label="本金"] .panelHeader{
+  margin-bottom:12px !important;
+}
+.cardPanel[aria-label="本金"] .bankBar{
+  margin:0;
+  padding:0;
+  border:0;
+  background: transparent;
+}
+
 .cardPanel[aria-label="誰游"] .figmaForm{
   margin-top:4px !important;  /* 16(header) + 4 = players rhythm */
   padding-left:4px !important;
@@ -4093,6 +4152,26 @@ input,select,.stepper,.segmented{
           </div>
           </div>
   </div>
+
+  <div class="card cardPanel" aria-label="本金">
+    <div class="panelSection">
+      <div class="panelHeader">
+        <div class="panelTitle">本金</div>
+      </div>
+      <div id="bankBar" class="bankBar" role="group" aria-label="本金設定">
+        <div class="bankRow">
+          <div class="bankChips" role="radiogroup" aria-label="本金">
+            <button class="chip bankChip" type="button" data-val="100" aria-pressed="false">100</button>
+            <button class="chip bankChip" type="button" data-val="200" aria-pressed="false">200</button>
+            <button class="chip bankChip" type="button" data-val="300" aria-pressed="false">300</button>
+            <button class="chip bankChip" type="button" data-val="500" aria-pressed="false">500</button>
+            <button class="chip bankChip" type="button" data-val="1000" aria-pressed="false">1000</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="card cardPanel" aria-label="誰游">
     <div class="panelSection cardFormFigma">
             <div class="panelHeader">
@@ -4447,7 +4526,8 @@ function getBustedTaunt(idx){
 }
 
 
-const START_STACK = 100; // 每局每人起始 100
+let START_STACK = 100; // 目前大局起始本金（需先選擇）
+let startStackSelected = null; // A 模式：不預設，需選擇後才能記錄
 
 // 連莊規則：逆時針當莊（固定座位：東(0) → 南(1) → 西(2) → 北(3) → 東...）
 // 你們已固定座位，所以直接依索引順序輪即可。
@@ -4646,6 +4726,10 @@ function syncRecordLock(bustedIdx){
     setRoundLocked(true, `本局已結算：${getBustedTaunt(bustedIdx)}`);
     return;
   }
+  if (startStackSelected == null){
+    setRoundLocked(true, "請先選擇本金");
+    return;
+  }
   // 起莊固定從東開始，不需要手動設莊
   setRoundSoftLocked(false);
   setRoundLocked(false);
@@ -4654,6 +4738,25 @@ function syncRecordLock(bustedIdx){
   let rounds = [];
   let battleGames = []; // 大局戰績（按「清空全部局數」時記一筆）
   let youForcedByType = false;
+
+
+function updateBankUI(){
+  const bar = document.getElementById("bankBar");
+    const chips = Array.from(document.querySelectorAll(".bankChip"));
+  const hasRounds = (typeof rounds !== "undefined") && Array.isArray(rounds) && rounds.length > 0;
+
+  // Lock chips after any record exists (avoid mid-game changes)
+  if (bar){
+    bar.classList.toggle("is-locked", hasRounds);
+  }
+  chips.forEach(btn=>{
+    const v = Number(btn.dataset.val);
+    const isSel = (startStackSelected != null) && (Number(startStackSelected) === v);
+    btn.classList.toggle("is-selected", isSel);
+    btn.setAttribute("aria-pressed", isSel ? "true" : "false");
+    btn.disabled = hasRounds;
+  });
+}
 
   // 連莊：是否手動改過「下一把莊家」
   let dealerManualOverride = false;
@@ -5471,6 +5574,10 @@ function formatSeatName(name){
 }
 
   function addRound(){
+  if (startStackSelected == null){
+    alert("請先選擇本金");
+    return;
+  }
   const st0 = simulateGameState();
   if (st0.bustedIdx != null){
     alert(`本局已結算：${getBustedTaunt(st0.bustedIdx)}。請清空全部局數/開始新局。`);
@@ -5864,7 +5971,8 @@ const hbHtml = hbSorted.length ? `
     renderRoundList();
     renderTotalsAndTransfers();
     try{ renderBattleboard(); }catch(e){}
-    try{ renderDealerChip(); }catch(e){}
+    try{ renderDealerChip(); }catch(e){    try{ updateBankUI(); }catch(e){}
+}
   }
 
   function resetPlayersOnly(){
@@ -5932,6 +6040,21 @@ const hbHtml = hbSorted.length ? `
 
   $("resetBtn").addEventListener("click", ()=>{ if(confirm("確定要重置麻友名稱？")) resetPlayersOnly(); });
   $("addRoundBtn").addEventListener("click", addRound);
+
+  // 本金（A：不預設）：需先選擇才能記錄
+  document.querySelectorAll(".bankChip").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if (Array.isArray(rounds) && rounds.length > 0) return; // mid-game lock
+      const v = Number(btn.dataset.val);
+      if (!v) return;
+      startStackSelected = v;
+      START_STACK = v;
+      updateBankUI();
+      try{ syncRecordLock(null); }catch(e){}
+      renderAll();
+    });
+  });
+
   $("dealerSel").addEventListener("change", ()=>{
     if (suppressDealerChange) return;
     try{ setDealerAssigned(true); }catch(e){}
@@ -5962,6 +6085,12 @@ const hbHtml = hbSorted.length ? `
   rounds = [];
   dealerManualOverride = false;
   lastBustedIdx = null;
+
+
+  // 清空後：本金選擇回到「未選」(A 模式)
+  startStackSelected = null;
+  START_STACK = 100;
+  try{ updateBankUI(); }catch(e){}
 
   // 清空後：需要重新起莊
   try{ setDealerAssigned(true); }catch(e){}
