@@ -3067,30 +3067,34 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
 }
 
 .playerMain{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 18px;
+  text-align: center;
+  transition: transform .18s ease;
+}
+
+.playerNameText{
   font-size: 17px;
   font-weight: 900;
   letter-spacing: .5px;
   color: rgba(255,255,255,.95);
   text-shadow: 0 2px 0 rgba(0,0,0,.35);
   line-height: 1.12;
-  padding: 0 18px;
   text-align: center;
-  width: 100%;
   min-width: 0;
-  max-width: 600px;
-  margin: 0 auto;
-
-  /* allow wrapping instead of "..." */
+  max-width: calc(100% - 26px);
   white-space: normal;
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-
   overflow-wrap: anywhere;
   word-break: break-word;
-
-  transition: transform .18s ease;
 }
 
 .playerHint{
@@ -3115,6 +3119,8 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
 .inlineNameInput{
   width: 100% !important;
   max-width: 100% !important;
+  flex: 1 1 auto;
+  min-width: 0;
   text-align: center !important;
 
   background: transparent !important;
@@ -3167,6 +3173,55 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
   box-shadow:
     0 0 0 2px rgba(245,210,74,.26) inset,
     0 10px 22px rgba(245,210,74,.10) !important;
+}
+
+/* Seat assignment (only when there is no record card yet) */
+.playerGrid.isSeatEdit .playerCard{
+  cursor: grab;
+}
+.playerGrid.isSeatEdit .playerCard:active{
+  cursor: grabbing;
+}
+.playerCard.isSeatPick{
+  outline: 2px solid rgba(255,255,255,.55);
+  outline-offset: 2px;
+}
+.playerGrid:not(.isSeatEdit) .playerHint{
+  display:none;
+}
+.nameEditBtn{
+  position: static;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  height: 18px;
+  width: 18px;
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,.72);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.nameEditBtn:hover{ filter:none !important; }
+.nameEditBtn:active{
+  transform: translateY(1px);
+  color: rgba(255,255,255,.88);
+}
+.dragGhost{
+  z-index: 9999;
+  opacity: .95;
+  pointer-events:none;
+  filter: drop-shadow(0 14px 22px rgba(0,0,0,.45));
+}
+body.isSeatDragging{
+  user-select:none;
+  -webkit-user-select:none;
 }
 
 .playerCard.isDealer .seatWindTag{
@@ -4193,6 +4248,176 @@ input,select,.stepper,.segmented{
   // 座位固定：麻友1=東、麻友2=南、麻友3=西、麻友4=北
   const SEAT_WIND = ["東","南","西","北"];
 
+  // 配位模式：只有在「尚未有任何紀錄卡」時（rounds.length === 0）才允許互換座位，避免誤觸
+  let seatPickIdx = null;
+  const seatDrag = { active:false, src:null, srcEl:null, ghost:null, startX:0, startY:0, moved:false };
+
+  function isSeatEditMode(){
+    try{ return Array.isArray(rounds) ? (rounds.length === 0) : true; }catch(e){ return true; }
+  }
+
+  function clearSeatPickUI(){
+    try{
+      document.querySelectorAll('.playerCard.isSeatPick').forEach(el=>el.classList.remove('isSeatPick'));
+    }catch(e){}
+  }
+
+  function swapSeatNames(a,b){
+    if (a == null || b == null) return;
+    a = Number(a); b = Number(b);
+    if (Number.isNaN(a) || Number.isNaN(b) || a === b) return;
+    const t = players[a];
+    players[a] = players[b];
+    players[b] = t;
+    seatPickIdx = null;
+    try{ renderSelectors(); }catch(e){}
+    try{ renderNames(); }catch(e){}
+    try{ renderAll(); }catch(e){}
+  }
+
+  function handleSeatPick(idx){
+    idx = Number(idx);
+    if (Number.isNaN(idx)) return;
+    // 只在配位模式生效
+    if (!isSeatEditMode()) return;
+
+    if (seatPickIdx == null){
+      seatPickIdx = idx;
+      clearSeatPickUI();
+      const el = document.querySelector(`.playerCard[data-seat="${idx}"]`);
+      if (el) el.classList.add('isSeatPick');
+      return;
+    }
+    if (seatPickIdx === idx){
+      seatPickIdx = null;
+      clearSeatPickUI();
+      return;
+    }
+    const a = seatPickIdx;
+    seatPickIdx = null;
+    clearSeatPickUI();
+    swapSeatNames(a, idx);
+  }
+
+  function makeDragGhostFrom(el){
+    const rect = el.getBoundingClientRect();
+    const g = el.cloneNode(true);
+    g.classList.add('dragGhost');
+    // Remove duplicate ids inside ghost
+    try{ g.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id')); }catch(e){}
+    g.style.position = 'fixed';
+    g.style.left = '0px';
+    g.style.top = '0px';
+    g.style.width = rect.width + 'px';
+    g.style.height = rect.height + 'px';
+    g.style.pointerEvents = 'none';
+    g.style.margin = '0';
+    g.style.transform = 'translate(-9999px,-9999px)';
+    document.body.appendChild(g);
+    return g;
+  }
+
+  function seatDragCleanup(){
+    seatDrag.active = false;
+    seatDrag.src = null;
+    seatDrag.srcEl = null;
+    seatDrag.moved = false;
+    try{
+      if (seatDrag.ghost){ seatDrag.ghost.remove(); }
+    }catch(e){}
+    seatDrag.ghost = null;
+    document.body.classList.remove('isSeatDragging');
+
+    window.removeEventListener('pointermove', seatDragMove);
+    window.removeEventListener('pointerup', seatDragEnd);
+    window.removeEventListener('touchmove', seatDragMove);
+    window.removeEventListener('touchend', seatDragEnd);
+    window.removeEventListener('mousemove', seatDragMove);
+    window.removeEventListener('mouseup', seatDragEnd);
+  }
+
+  function beginSeatDrag(idx, el, e){
+    if (!isSeatEditMode()) return;
+    if (seatDrag.active) return;
+    if (!el) return;
+
+    // 若正在選座位，先取消
+    seatPickIdx = null;
+    clearSeatPickUI();
+
+    seatDrag.active = true;
+    seatDrag.src = Number(idx);
+    seatDrag.srcEl = el;
+    seatDrag.moved = false;
+
+    const pt = (e && e.touches && e.touches[0]) ? e.touches[0] : e;
+    seatDrag.startX = pt ? pt.clientX : 0;
+    seatDrag.startY = pt ? pt.clientY : 0;
+
+    window.addEventListener('pointermove', seatDragMove, { passive:false });
+    window.addEventListener('pointerup', seatDragEnd, { passive:false });
+    window.addEventListener('touchmove', seatDragMove, { passive:false });
+    window.addEventListener('touchend', seatDragEnd, { passive:false });
+    window.addEventListener('mousemove', seatDragMove, { passive:false });
+    window.addEventListener('mouseup', seatDragEnd, { passive:false });
+  }
+
+  function seatDragMove(e){
+    if (!seatDrag.active || !seatDrag.srcEl) return;
+
+    const pt = (e && e.touches && e.touches[0]) ? e.touches[0] : e;
+    if (!pt) return;
+    const x = pt.clientX, y = pt.clientY;
+
+    const dx = x - seatDrag.startX;
+    const dy = y - seatDrag.startY;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+
+    if (!seatDrag.moved && dist < 8) return;
+
+    if (!seatDrag.ghost){
+      seatDrag.ghost = makeDragGhostFrom(seatDrag.srcEl);
+      document.body.classList.add('isSeatDragging');
+    }
+    seatDrag.moved = true;
+
+    const rect = seatDrag.srcEl.getBoundingClientRect();
+    seatDrag.ghost.style.left = (x - rect.width/2) + 'px';
+    seatDrag.ghost.style.top  = (y - rect.height/2) + 'px';
+    seatDrag.ghost.style.transform = 'translate(0,0)';
+
+    try{ e.preventDefault(); }catch(_e){}
+  }
+
+  function seatDragEnd(e){
+    if (!seatDrag.active) return;
+
+    const moved = seatDrag.moved;
+    const srcIdx = seatDrag.src;
+    const srcEl = seatDrag.srcEl;
+
+    let dstIdx = null;
+    if (moved){
+      const pt = (e && e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : e;
+      const x = pt ? pt.clientX : null;
+      const y = pt ? pt.clientY : null;
+      if (x != null && y != null){
+        let target = document.elementFromPoint(x, y);
+        target = target ? target.closest('.playerCard[data-seat]') : null;
+        if (target) dstIdx = Number(target.dataset.seat);
+      }
+    }
+
+    seatDragCleanup();
+
+    if (moved && dstIdx != null && srcIdx != null && dstIdx !== srcIdx){
+      // 防止後續 click 觸發改名
+      if (srcEl) srcEl.dataset.ignoreClick = "1";
+      swapSeatNames(srcIdx, dstIdx);
+    }
+  }
+
+
 // ===== Random "busted" taunts (when someone drops to 0 or below) =====
 // 只輸出「{name}輸掉XXXX」這種短句（不含「這局」）
 const BUST_TAUNT_SUFFIXES = [
@@ -4868,11 +5093,17 @@ function formatSeatName(name){
     input.value = current;
     input.setAttribute("aria-label", `編輯麻友${idx+1}名稱`);
 
-    // Replace display with input
-    main.innerHTML = "";
-    main.appendChild(input);
+    const pencil = main.querySelector('.nameEditBtn');
+    const nameSpan = main.querySelector('.playerNameText');
+    if (pencil){ pencil.style.display = 'none'; pencil.setAttribute('aria-hidden','true'); }
 
-    // Stop click bubbling (so button doesn't re-trigger)
+    // Replace name text with input
+    if (nameSpan) {
+      try{ nameSpan.replaceWith(input); }catch(e){ main.appendChild(input); }
+    } else {
+      main.appendChild(input);
+    }
+// Stop click bubbling (so button doesn't re-trigger)
     input.addEventListener("pointerdown", (e)=>{ e.stopPropagation(); });
     input.addEventListener("click", (e)=>{ e.stopPropagation(); });
 
@@ -4883,9 +5114,28 @@ function formatSeatName(name){
         players[idx] = v || `麻友${idx+1}`;
         renderSelectors();
       }
-      // Clear editing state first, then re-render UI
+      // Clear editing state first, then restore display and re-render UI
       inlineEditingIdx = null;
       if (btn) btn.classList.remove("is-editing");
+
+      try{
+        const host = document.getElementById(`seatName${idx}`);
+        if (host){
+          const pencil2 = host.querySelector('.nameEditBtn');
+          if (pencil2){ pencil2.style.display = ''; pencil2.removeAttribute('aria-hidden'); }
+          let span2 = host.querySelector('.playerNameText');
+          if (!span2){
+            span2 = document.createElement('span');
+            span2.className = 'playerNameText';
+          }
+          span2.textContent = (players[idx] != null ? String(players[idx]) : `麻友${idx+1}`);
+          if (input && input.isConnected){
+            try{ input.replaceWith(span2); }catch(e){}
+          } else if (!span2.isConnected){
+            host.appendChild(span2);
+          }
+        }
+      }catch(e){}
 
       try{ renderNames(); }catch(e){}
       try{ renderAll(); }catch(e){}
@@ -4963,118 +5213,71 @@ function formatSeatName(name){
         <div class="playerGrid" id="playerGrid" aria-label="麻友">
           <div class="playerCard" data-seat="0" role="button" tabindex="0" aria-label="麻友 1">
             <span class="seatWindTag">東</span>
-            <div class="playerMain" id="seatName0"></div>
-            <div class="playerHint">（長按可改莊）</div>
+            <div class="playerMain" id="seatName0"><button class="nameEditBtn" data-seat="0" type="button" aria-label="改名">✎</button><span class="playerNameText"></span></div>
+            <div class="playerHint">拖拽配位</div>
           </div>
           <div class="playerCard" data-seat="1" role="button" tabindex="0" aria-label="麻友 2">
             <span class="seatWindTag">南</span>
-            <div class="playerMain" id="seatName1"></div>
-            <div class="playerHint">（長按可改莊）</div>
+            <div class="playerMain" id="seatName1"><button class="nameEditBtn" data-seat="1" type="button" aria-label="改名">✎</button><span class="playerNameText"></span></div>
+            <div class="playerHint">拖拽配位</div>
           </div>
           <div class="playerCard" data-seat="2" role="button" tabindex="0" aria-label="麻友 3">
             <span class="seatWindTag">西</span>
-            <div class="playerMain" id="seatName2"></div>
-            <div class="playerHint">（長按可改莊）</div>
+            <div class="playerMain" id="seatName2"><button class="nameEditBtn" data-seat="2" type="button" aria-label="改名">✎</button><span class="playerNameText"></span></div>
+            <div class="playerHint">拖拽配位</div>
           </div>
           <div class="playerCard" data-seat="3" role="button" tabindex="0" aria-label="麻友 4">
             <span class="seatWindTag">北</span>
-            <div class="playerMain" id="seatName3"></div>
-            <div class="playerHint">（長按可改莊）</div>
+            <div class="playerMain" id="seatName3"><button class="nameEditBtn" data-seat="3" type="button" aria-label="改名">✎</button><span class="playerNameText"></span></div>
+            <div class="playerHint">拖拽配位</div>
           </div>
         </div>
       `;
 
-      // 點卡片：改名字（跳鍵盤/彈窗）；長按：起莊（選第一位莊家）
-      const longPressMs = 420;
-
+           // 配位：沒有任何紀錄卡時可拖拽／點兩下互換座位；一旦有紀錄卡就鎖住避免誤觸
       root.querySelectorAll('.playerCard[data-seat]').forEach(btn=>{
         const idx = Number(btn.dataset.seat);
-        let t = null;
 
-        const start = (e)=>{
-          btn.classList.add("is-pressing");
-          t = window.setTimeout(()=>{
-            btn.dataset.ignoreClick = "1";
+        // 右下角 ✎：改名（不受配位鎖影響）
+        const editBtn = btn.querySelector('.nameEditBtn');
+        if (editBtn && !editBtn.dataset.bound){
+          editBtn.dataset.bound = "1";
+          editBtn.addEventListener("pointerdown", (e)=>{ e.stopPropagation(); }, { passive:true });
+          editBtn.addEventListener("touchstart", (e)=>{ e.stopPropagation(); }, { passive:true });
+          editBtn.addEventListener("click", (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            startInlineNameEdit(idx, btn);
+          });
+        }
 
-            const sel = $("dealerSel");
-            if (sel){
-              sel.value = String(idx);
-              sel.dispatchEvent(new Event("change", { bubbles:true }));
-            } else {
-              try{ setDealerAssigned(true); }catch(e){}
-            }
-
-            // 讓 UI 立刻更新（顯示金點/隱藏提示）
-            try{ renderNames(); }catch(e){}
-            try{ navigator.vibrate && navigator.vibrate(10); }catch(e){}
-          }, longPressMs);
-        };
-
-        const cancel = ()=>{
-          btn.classList.remove("is-pressing");
-          if (t){ clearTimeout(t); t = null; }
-        };
-
-        // Press handlers: support PointerEvent + older touch/mouse; don't preventDefault (it can kill click on iOS)
-        let pressActive = false;
-        let pressType = null;
-        let pressPointerId = null;
-
-        const startPress = (e)=>{
+        // Drag swap（手機友善）
+        const down = (e)=>{
+          if (!isSeatEditMode()) return;
           if (btn.classList.contains("is-editing")) return;
-
-          // Guard against duplicate touch+pointer sequences
-          if (pressActive) return;
-
-          // Left click only
-          if ((e.type === "mousedown" || e.pointerType === "mouse") && e.button !== 0) return;
-
-          pressActive = true;
-          pressType = (e.type && e.type.startsWith("touch")) ? "touch" : ((e.type && e.type.startsWith("mouse")) ? "mouse" : "pointer");
-          pressPointerId = (e && e.pointerId != null) ? e.pointerId : null;
-
-          start(e);
+          beginSeatDrag(idx, btn, e);
         };
+        btn.addEventListener("pointerdown", down, { passive:true });
+        btn.addEventListener("touchstart", down, { passive:true });
+        btn.addEventListener("mousedown", down);
 
-        const endPress = (e)=>{
-          if (!pressActive) return;
-
-          // If a different pointer id bubbles in, ignore it
-          if (pressType === "pointer" && pressPointerId != null && e && e.pointerId != null && e.pointerId !== pressPointerId) return;
-
-          pressActive = false;
-          pressType = null;
-          pressPointerId = null;
-
-          cancel();
-        };
-
-        btn.addEventListener("pointerdown", startPress);
-        btn.addEventListener("pointerup", endPress);
-        btn.addEventListener("pointercancel", endPress);
-        btn.addEventListener("pointerleave", endPress);
-
-        // Fallbacks: some in-app browsers/WebViews are flaky with PointerEvent
-        btn.addEventListener("touchstart", startPress, { passive:true });
-        btn.addEventListener("touchend", endPress);
-        btn.addEventListener("touchcancel", endPress);
-
-        btn.addEventListener("mousedown", startPress);
-        btn.addEventListener("mouseup", endPress);
-        btn.addEventListener("mouseleave", endPress);
-
-        // Prevent iOS context menu on long-press
-        btn.addEventListener("contextmenu", (e)=>{ e.preventDefault(); });
-
+        // 點：配位模式下＝選座位/交換；非配位模式＝改名
         btn.addEventListener("click", (e)=>{
           if (btn.classList.contains("is-editing")) return;
+
           if (btn.dataset.ignoreClick === "1"){
             btn.dataset.ignoreClick = "0";
             e.preventDefault();
             e.stopPropagation();
             return;
           }
-          startInlineNameEdit(idx, btn);
+
+          if (isSeatEditMode()){
+            handleSeatPick(idx);
+            return;
+          }
+          // 鎖定狀態下不點卡改名；請點 ✎
+          return;
         });
 
         // Keyboard accessibility (desktop)
@@ -5082,24 +5285,45 @@ function formatSeatName(name){
           if (btn.classList.contains("is-editing")) return;
           if (e.key === "Enter" || e.key === " "){
             e.preventDefault();
-            startInlineNameEdit(idx, btn);
+            if (isSeatEditMode()) handleSeatPick(idx);
+            else return;
           }
+        });
+
+        // Prevent context menu in seat edit mode (desktop)
+        btn.addEventListener("contextmenu", (e)=>{
+          if (isSeatEditMode()) e.preventDefault();
         });
       });
 
       // initNameModal(); // no longer used (inline edit)
-      try{ updateDealerDropZones(); }catch(e){}}
-
-    // 更新顯示
-    for (let i=0; i<4; i++){
+      try{ updateDealerDropZones(); }catch(e){}}for (let i=0; i<4; i++){
       const el = document.getElementById(`seatName${i}`);
       if (el){
         const editingThis = (inlineEditingIdx === i) && el.querySelector(".inlineNameInput");
-        if (!editingThis) el.innerHTML = formatSeatName(players[i]);
+        if (!editingThis){
+          const span = el.querySelector('.playerNameText');
+          if (span) span.textContent = (players[i] != null ? String(players[i]) : `麻友${i+1}`);
+        }
       }
       const seatBtn = root.querySelector(`.playerCard[data-seat="${i}"]`);
-      if (seatBtn) seatBtn.setAttribute('aria-label', `麻友 ${i+1}：${players[i]}`);
+      if (seatBtn) seatBtn.setAttribute('aria-label', `${SEAT_WIND[i]}：${players[i]}`);
     }
+
+    // 配位模式：顯示/鎖定拖拽（有紀錄卡後自動鎖住）
+    try{
+      const grid = document.getElementById("playerGrid");
+      if (grid) grid.classList.toggle("isSeatEdit", isSeatEditMode());
+
+      // 重新套用座位選取 UI
+      clearSeatPickUI();
+      if (isSeatEditMode() && seatPickIdx != null){
+        const pickEl = root.querySelector(`.playerCard[data-seat="${seatPickIdx}"]`);
+        if (pickEl) pickEl.classList.add("isSeatPick");
+      } else {
+        seatPickIdx = null;
+      }
+    }catch(e){}
     // 莊家標記（選中才顯示）
     try{
       const sel = $("dealerSel");
