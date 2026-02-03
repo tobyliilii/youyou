@@ -3157,16 +3157,7 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
 }
 
 /* Seat assignment (only when there is no record card yet) */
-.playerGrid.isSeatEdit .playerCard{
-  cursor: grab;
-}
-.playerGrid.isSeatEdit .playerCard:active{
-  cursor: grabbing;
-}
 
-.playerGrid:not(.isSeatEdit) .playerHint{
-  display:none;
-}
 .nameEditIcon{display:block;width:16px;height:16px;}
 
 .nameEditBtn{
@@ -4240,12 +4231,6 @@ input,select,.stepper,.segmented{
 .battleYoujinNote{opacity:.8;font-size:12px}
 
 
-/* === Seat edit toggle === */
-#seatEditBtn{ color: rgba(255,255,255,.70); }
-#seatEditBtn.is-active{
-  color: rgba(245,210,74,.92);
-  filter: drop-shadow(0 8px 18px rgba(0,0,0,.28));
-}
 
 
 
@@ -4280,12 +4265,6 @@ input,select,.stepper,.segmented{
     <div class="panelSection cardPlayerSetup">
             <div class="panelHeader">
               <div class="panelTitle">麻友們</div>
-              
-              <button id="seatEditBtn" class="panelIconBtn" type="button" aria-label="編輯座位" title="編輯座位" aria-pressed="false">
-                <svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true" focusable="false">
-                  <path d="M4 7h16v2H4V7zm0 4h10v2H4v-2zm0 4h16v2H4v-2z" fill="currentColor"/>
-                </svg>
-              </button>
 <button id="resetBtn" class="panelIconBtn panelIconBtn--muted" type="button" aria-label="重置麻友名稱" title="重置麻友名稱">
                 <svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true" focusable="false">
                   <path d="M20 12a8 8 0 1 1-2.6-5.8" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
@@ -4476,14 +4455,10 @@ input,select,.stepper,.segmented{
   const seatDrag = { active:false, src:null, srcEl:null, ghost:null, startX:0, startY:0, moved:false };
 
   function isSeatEditMode(){
-    try{
-      const grid = document.querySelector(".playerGrid");
-      // 允許手動開啟「編輯座位」，即使已經有局數
-      if (grid && grid.classList.contains("isSeatEdit")) return true;
-      // 原本規則：沒記任何局時可直接編輯
-      return rounds.length === 0;
-    }catch(e){ return false; }
+    try{ return rounds.length === 0; }
+    catch(e){ return false; }
   }
+
 
 
   function clearSeatPickUI(){
@@ -5301,6 +5276,12 @@ function formatSeatName(name){
   let inlineEditingIdx = null;
 
   function startInlineNameEdit(idx, btn){
+    // 鎖定：一旦開始記錄（有局數）就不允許改名/換位，避免影響帳目
+    if (Array.isArray(rounds) && rounds.length > 0){
+      alert("已開始記錄，為避免影響戰績已鎖定編輯。\n需要修改請先按「清空全部局數」。");
+      return;
+    }
+
     if (btn && btn.classList.contains("is-editing")) return;
     const main = document.getElementById(`seatName${idx}`);
     if (!main) return;
@@ -6168,19 +6149,6 @@ function renderTotalsAndTransfers(){
 
   $("resetBtn").addEventListener("click", ()=>{ if(confirm("確定要重置麻友名稱？")) resetPlayersOnly(); });
 
-  const seatEditBtn = $("seatEditBtn");
-  if(seatEditBtn){
-    seatEditBtn.addEventListener("click", ()=>{
-      const grid = document.querySelector(".playerGrid");
-      if(!grid) return;
-      const on = !grid.classList.contains("isSeatEdit");
-      grid.classList.toggle("isSeatEdit", on);
-      clearSeatPickUI();
-      seatEditBtn.classList.toggle("is-active", on);
-      seatEditBtn.setAttribute("aria-pressed", on ? "true" : "false");
-    });
-  }
-
   $("addRoundBtn").addEventListener("click", addRound);
 
   // 本金（A：不預設）：需先選擇才能記錄
@@ -6259,6 +6227,8 @@ function renderTotalsAndTransfers(){
   // 記錄按鈕狀態：尚未設莊 → 鎖住
   try{ syncRecordLock(null); }catch(e){}
 
+  try{ clearSeatPickUI(); }catch(e){}
+  try{ renderNames(); }catch(e){}
   renderAll();
 });
 $("youSel").addEventListener("change", toggleYouUI);
