@@ -4933,10 +4933,12 @@ function updateBankUI(){
     }
 
     const cum = Array(players.length).fill(0);
+    const cumHb = Array(players.length).fill(0);
 
     listEl.innerHTML = battleGames.map((g, idx)=>{
       for (let i=0;i<cum.length;i++){
         cum[i] = round2(cum[i] + (Number((g.delta||[])[i]) || 0));
+        cumHb[i] = round2(cumHb[i] + (Number((g.hbDelta||[])[i]) || 0));
       }
 
       const losers = (g.losers || []);
@@ -4948,8 +4950,11 @@ function updateBankUI(){
       const mainAmt  = `+${fmtMoney(Number(g.amount)||0)}`;
 
       const cumLine = "計：" + cum.map((v,i)=>{
-        const sign = (v > 0.000001) ? "+" : "";
-        return `${escapeHtml(players[i])} ${sign}${fmtMoney(v)}`;
+        const total = round2(v + (Number(cumHb[i])||0));
+        const hb = round2(Number(cumHb[i])||0);
+        const sign = (total > 0.000001) ? "+" : "";
+        const hbNote = (Math.abs(hb) > 0.000001) ? ` (游金 ${(hb>0)?"+":""}${fmtMoney(hb)})` : "";
+        return `${escapeHtml(players[i])} ${sign}${fmtMoney(total)}${hbNote}`;
       }).join("｜");
 
       return `
@@ -4963,7 +4968,7 @@ function updateBankUI(){
       `;
     }).join("");
 
-    // 今晚累計（本金 / 紅包）
+    // 今晚累計（含游金）
     const night = Array(players.length).fill(0);
     const nightHb = Array(players.length).fill(0);
 
@@ -4974,7 +4979,8 @@ function updateBankUI(){
       }
     });
 
-    const settle = settleTransfers(night);
+    const nightTotal = night.map((v,i)=> round2(v + (Number(nightHb[i])||0)));
+    const settle = settleTransfers(nightTotal);
     const settleRows = settle.length
       ? settle.map(t=>`
           <div class="battleSettleRow">
@@ -4984,18 +4990,9 @@ function updateBankUI(){
         `).join("")
       : `<div class="muted" style="padding:10px 12px;">無需清算</div>`;
 
-    const hbSettle = settleTransfers(nightHb);
-    const hbText = hbSettle.length
-      ? hbSettle.map(t=>`${escapeHtml(players[t.from])} → ${escapeHtml(players[t.to])} ${fmtMoney(t.amount)}`).join("、")
-      : "無需清算";
-
     sumEl.innerHTML = `
-      <div class="battleSectionTitle">今晚清算</div>
+      <div class="battleSectionTitle">今晚清算（含游金）</div>
       <div class="battleSettleList">${settleRows}</div>
-      <div class="battleHongbaoLine">
-        <span class="hongbaoBadge" aria-hidden="true"></span>
-        <div class="battleHongbaoText mono">紅包清算：${hbText}</div>
-      </div>
     `;
   }
 
@@ -5938,10 +5935,15 @@ function aggregatePairTransfers(list){
   }
 
 function renderTotalsAndTransfers(){
-  const { totals, youRecvCount, youRecvAmt, remain, bustedIdx, youTransfers } = computeTotals();
-  const sum = Math.round(totals.reduce((a,b)=>a+b,0)*100)/100;
+  const { totals, youRecvCount, youRecvAmt, youPayAmt, remain, bustedIdx, youTransfers } = computeTotals();
 
-  const transfers = settleTransfers(totals);
+  // 游金合併到總額：grandTotals = 本金輸贏 + (游金收 - 游金付)
+  const youNet = totals.map((_,i)=> round2((Number(youRecvAmt?.[i])||0) - (Number(youPayAmt?.[i])||0)));
+  const grandTotals = totals.map((v,i)=> round2((Number(v)||0) + youNet[i]));
+
+  const sum = Math.round(grandTotals.reduce((a,b)=>a+b,0)*100)/100;
+
+  const transfers = settleTransfers(grandTotals);
 
   const byWinner = new Map();
   transfers.forEach(t=>{
@@ -5949,39 +5951,29 @@ function renderTotalsAndTransfers(){
     byWinner.get(t.to).push(t);
   });
 
-  // 多贏家：依贏最多到最少排序，全部先置頂
-  const winners = totals
+  // 多贏家：依贏最多到最少排序，全部先置頂（以合併後總額為準）
+  const winners = grandTotals
     .map((amt,i)=>({i, amt: Math.round(amt*100)/100}))
     .filter(x=>x.amt > 0.000001)
     .sort((a,b)=>b.amt-a.amt);
 
   const hasWinners = winners.length > 0;
 
-  // 游金紅包：額外給付，不算本金
-  const hbAgg = aggregatePairTransfers(youTransfers || []);
-  const winOrder = new Map();
-  winners.forEach((w,idx)=>winOrder.set(w.i, idx));
-  const hbSorted = hbAgg.slice().sort((a,b)=>{
-    const oa = winOrder.has(a.to) ? winOrder.get(a.to) : 999;
-    const ob = winOrder.has(b.to) ? winOrder.get(b.to) : 999;
-    if (oa !== ob) return oa - ob;
-    if (a.to !== b.to) return a.to - b.to;
-    return b.amount - a.amount;
-  });
+  const youNote = (i)=>{
+    const y = round2(Number(youNet[i])||0);
+    if (Math.abs(y) <= 0.000001) return "";
+    const sign = (y > 0) ? "+" : "";
+    return `<span class="youjinNote mono">(游金 ${sign}${fmtMoney(y)})</span>`;
+  };
 
   const makeWinnerCard = (i, amt) => {
-    const hasYou = youRecvCount[i] > 0 && Math.abs(youRecvAmt[i]) > 0.000001;
-    const youStr = hasYou
-      ? `<span class="youjinMini"><span class="youjinIcon" aria-hidden="true"></span>紅包 +${fmtMoney(youRecvAmt[i])} / ${youRecvCount[i]}次</span>`
-      : `<span>&nbsp;</span>`;
-
     return `
       <div class="settleCard is-winner">
         <div class="settleTop">
           <div class="settleName">${escapeHtml(players[i])}</div>
           <div class="settleAmt pos mono">+${fmtMoney(amt)}</div>
         </div>
-        <div class="settleMeta">${youStr}</div>
+        <div class="settleMeta">${youNote(i) || `&nbsp;`}</div>
       </div>
     `;
   };
@@ -5995,7 +5987,7 @@ function renderTotalsAndTransfers(){
           <div class="settleName">${escapeHtml(players[i])}</div>
           <div class="settleAmt ${cls} mono">${sign}${fmtMoney(amt)}</div>
         </div>
-        <div class="settleMeta">&nbsp;</div>
+        <div class="settleMeta">${youNote(i) || `&nbsp;`}</div>
       </div>
     `;
   };
@@ -6014,24 +6006,16 @@ function renderTotalsAndTransfers(){
     `;
   };
 
-
-
-const hbHtml = hbSorted.length ? `
-  <div class="hongbaoTitle"><span class="hongbaoBadge" aria-hidden="true"></span><span>游金紅包</span></div>
-  <div class="settleGrid">${hbSorted.map(makeTransferCard).join("")}</div>
-` : ``;
-
   const warnHtml = (Math.abs(sum) < 0.01) ? "" : `<div class="warn">警告：總和不為 0（目前 ${fmtMoney(sum)}）</div>`;
   const settleHtml = (bustedIdx == null) ? "" : `<div class="ok">${escapeHtml(getBustedTaunt(bustedIdx))}</div>`;
 
-  // 沒有任何輸贏：維持 4 張摘要卡
+  // 沒有任何輸贏：維持摘要卡（顯示合併後總額）
   if(!hasWinners){
-    const cards = totals.map((amt,i)=>makeNeutralCard(i, Math.round(amt*100)/100)).join("");
+    const cards = grandTotals.map((amt,i)=>makeNeutralCard(i, Math.round(amt*100)/100)).join("");
     $("totalsArea").innerHTML = `
       ${warnHtml}
       ${settleHtml}
       <div class="settleGrid">${cards}</div>
-      ${hbHtml}
     `;
     fitAllTotalsNames();
 
@@ -6052,8 +6036,8 @@ const hbHtml = hbSorted.length ? `
     list.forEach(t=>loserCardsArr.push(makeTransferCard(t)));
   });
 
-  // 若有中立玩家（0），放到最底部（不影響贏家置頂）
-  totals.forEach((amt,i)=>{
+  // 若有中立玩家（0），放到最底部
+  grandTotals.forEach((amt,i)=>{
     const a = Math.round(amt*100)/100;
     if (Math.abs(a) <= 0.000001){
       loserCardsArr.push(makeNeutralCard(i, a));
@@ -6065,15 +6049,25 @@ const hbHtml = hbSorted.length ? `
     ${settleHtml}
     <div class="settleGrid">${winnerCards}</div>
     ${loserCardsArr.length ? `<div class="settleGrid" style="margin-top:12px">${loserCardsArr.join("")}</div>` : ``}
-    ${hbHtml}
   `;
-    fitAllTotalsNames();
-
+  fitAllTotalsNames();
 
   maybeResetDealerOnBust(bustedIdx);
 
-    syncRecordLock(bustedIdx);
-  $("transfersArea").innerHTML = "";
+  syncRecordLock(bustedIdx);
+
+  // 付款清單（合併後總額）
+  $("transfersArea").innerHTML = `
+    <div class="battleSectionTitle">清算明細</div>
+    <div class="battleSettleList">
+      ${transfers.length ? transfers.map(t=>`
+          <div class="battleSettleRow">
+            <span class="battlePay">${escapeHtml(players[t.from])} → ${escapeHtml(players[t.to])}</span>
+            <span class="battleSettleAmt mono">${fmtMoney(t.amount)}</span>
+          </div>
+      `).join("") : `<div class="muted" style="padding:10px 12px;">無需清算</div>`}
+    </div>
+  `;
 }
   function renderAll(){
     syncNextRoundUI();
