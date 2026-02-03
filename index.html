@@ -3000,7 +3000,7 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
   grid-template-columns: minmax(0,1fr) minmax(0,1fr);
   /* tighter spacing so 2x2 stays rectangular on small screens */
   gap: 12px 12px;
-  padding: 12px 6px 0;
+  padding: 12px 12px 0;
   width:100%;
   box-sizing:border-box;
   max-width: 520px;
@@ -3164,12 +3164,15 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
   cursor: grabbing;
 }
 .playerCard.isSeatPick{
-  outline: 2px solid rgba(255,255,255,.55);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.55) inset;
 }
+
 .playerGrid:not(.isSeatEdit) .playerHint{
   display:none;
 }
+.nameEditIcon{display:block;width:16px;height:16px;}
+
 .nameEditBtn{
   position: static;
   border: 0 !important;
@@ -5401,22 +5404,30 @@ function formatSeatName(name){
         <div class="playerGrid" id="playerGrid" aria-label="麻友">
           <div class="playerCard" data-seat="0" role="button" tabindex="0" aria-label="麻友 1">
             <span class="seatWindTag">東</span>
-            <div class="playerMain" id="seatName0"><button class="nameEditBtn" data-seat="0" type="button" aria-label="改名">✎</button><span class="playerNameText"></span></div>
+            <div class="playerMain" id="seatName0"><button class="nameEditBtn" data-seat="0" type="button" aria-label="改名"><svg class="nameEditIcon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M3 21l6-2 12-12-5-5L4 14l-1 7z"/>
+                </svg></button><span class="playerNameText"></span></div>
             <div class="playerHint">拖拽配位</div>
           </div>
           <div class="playerCard" data-seat="1" role="button" tabindex="0" aria-label="麻友 2">
             <span class="seatWindTag">南</span>
-            <div class="playerMain" id="seatName1"><button class="nameEditBtn" data-seat="1" type="button" aria-label="改名">✎</button><span class="playerNameText"></span></div>
+            <div class="playerMain" id="seatName1"><button class="nameEditBtn" data-seat="1" type="button" aria-label="改名"><svg class="nameEditIcon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M3 21l6-2 12-12-5-5L4 14l-1 7z"/>
+                </svg></button><span class="playerNameText"></span></div>
             <div class="playerHint">拖拽配位</div>
           </div>
           <div class="playerCard" data-seat="2" role="button" tabindex="0" aria-label="麻友 3">
             <span class="seatWindTag">西</span>
-            <div class="playerMain" id="seatName2"><button class="nameEditBtn" data-seat="2" type="button" aria-label="改名">✎</button><span class="playerNameText"></span></div>
+            <div class="playerMain" id="seatName2"><button class="nameEditBtn" data-seat="2" type="button" aria-label="改名"><svg class="nameEditIcon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M3 21l6-2 12-12-5-5L4 14l-1 7z"/>
+                </svg></button><span class="playerNameText"></span></div>
             <div class="playerHint">拖拽配位</div>
           </div>
           <div class="playerCard" data-seat="3" role="button" tabindex="0" aria-label="麻友 4">
             <span class="seatWindTag">北</span>
-            <div class="playerMain" id="seatName3"><button class="nameEditBtn" data-seat="3" type="button" aria-label="改名">✎</button><span class="playerNameText"></span></div>
+            <div class="playerMain" id="seatName3"><button class="nameEditBtn" data-seat="3" type="button" aria-label="改名"><svg class="nameEditIcon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M3 21l6-2 12-12-5-5L4 14l-1 7z"/>
+                </svg></button><span class="playerNameText"></span></div>
             <div class="playerHint">拖拽配位</div>
           </div>
         </div>
