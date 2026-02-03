@@ -116,7 +116,7 @@
 
     input,select,button{
       border-radius:var(--r-md);
-      font-size:16px;
+      font-size:15px;
       color:var(--text);
       min-height:44px;
       outline:none;
@@ -274,7 +274,7 @@
       min-width:0;
       display:flex;
       flex-direction:column;
-      gap:8px;
+      gap:7px;
     }
 
     #namesRow.namesGrid input{
@@ -1020,13 +1020,13 @@ input{
 .youBadge{
   display:inline-flex;
   align-items:center;
-  gap:8px;
+  gap:7px;
   padding:6px 12px;
   border-radius:999px;
   border:2px solid rgba(245,210,74,.35);
   background: rgba(245,210,74,.10);
   color: rgba(255,255,255,.90);
-  font-size:16px;
+  font-size:15px;
   font-weight:800;
   margin-left:2px;
 }
@@ -1162,8 +1162,6 @@ input{
 }
 
 
-/* ===== PATCH (B): no localStorage + centered trash (desktop & mobile) + youjin icon only ===== */
-
 /* Trash: always center icon, all breakpoints */
 .roundDelBtn{
   display:flex !important;
@@ -1210,7 +1208,6 @@ input{
 }
 
 
-/* ===== PATCH vB4: Trash center + bigger sizes (desktop & mobile) ===== */
 .roundDelBtn{
   display:flex !important;
   align-items:center !important;
@@ -1245,7 +1242,6 @@ input{
 }
 
 
-/* ===== PATCH vB5: Desktop header vertical centering (trash truly centered) ===== */
 .roundHeader{
   align-items:center !important;  /* override older flex-start */
 }
@@ -1255,7 +1251,6 @@ input{
 }
 
 
-/* ===== PATCH vB7: Pin trash button absolute center (desktop+mobile) ===== */
 .roundHeader{
   position:relative !important;
   align-items:stretch !important; /* let title define height */
@@ -1303,7 +1298,6 @@ input{
 }
 
 
-/* ===== PATCH vB8: Center trash relative to WHOLE round card ===== */
 .roundCard{ position:relative !important; }
 .roundHeader{ position:static !important; } /* don't be positioning context */
 .roundDelBtn{
@@ -1317,7 +1311,6 @@ input{
 }
 
 
-/* ===== PATCH vB9: Mobile tune (trash smaller, thinner border, typography down) ===== */
 @media (max-width:520px){
   /* Trash: a bit smaller + border thinner */
   .roundDelBtn{
@@ -1349,7 +1342,6 @@ input{
 }
 
 
-/* ===== PATCH vB10: Mobile tables keep first column visible ===== */
 @media (max-width:520px){
   table{ table-layout:fixed !important; }
   th,td{ overflow:hidden; text-overflow:ellipsis; }
@@ -1360,8 +1352,6 @@ input{
   }
 }
 
-
-/* ===== PATCH vB11: iOS-ish interactions + youjin soft glow + mobile title spacing ===== */
 
 /* --- Trash button: subtle glow on hover/tap --- */
 .roundDelBtn{
@@ -1415,7 +1405,6 @@ input{
 }
 
 
-/* ===== PATCH vB12: Mobile trash frame smaller (requested) ===== */
 @media (max-width:520px){
   .roundDelBtn{
     width:58px !important;
@@ -1429,8 +1418,6 @@ input{
   }
 }
 
-
-/* ===== PATCH vB13: Winner line typography (bold name + lighter meta) + adaptive sizing + smart wrap + youjin tighten ===== */
 
 /* Base: separate emphasis */
 .rMain .rWinner{ font-weight:900; }
@@ -1462,7 +1449,7 @@ input{
 }
 
 /* If it wraps, keep second line a bit tighter */
-.rMain{ row-gap:8px; }
+.rMain{ row-gap:7px; }
 
 /* Mobile: adaptive sizing + more native spacing */
 @media (max-width:520px){
@@ -1507,13 +1494,11 @@ input{
 }
 
 
-/* ===== PATCH vB14: Auto adjust title tracking by winner name length ===== */
 .roundTitle .rMain{
   letter-spacing: var(--titleTrack, 0.15px);
 }
 
 
-/* ===== PATCH vB15: mobile rMain smaller + trash frame smaller ===== */
 @media (max-width:520px){
   .roundTitle .rMain{
     font-size:clamp(22px, 5.8vw, 24px) !important; /* smaller by ~1 step */
@@ -1536,13 +1521,11 @@ input{
 }
 
 
-/* ===== PATCH vB16: hide round detail lines (kept in DOM, not rendered) ===== */
 .roundLines{
   display:none !important;
 }
 
 
-/* ===== PATCH vB17: Desktop tables - tighten last column & improve alignment ===== */
 #totalsArea table,
 #transfersArea table{
   width:100%;
@@ -1643,7 +1626,7 @@ input{
   flex:1;
   min-width:0;
   font-weight:900;
-  font-size:16px;
+  font-size:15px;
   letter-spacing:.2px;
   overflow:hidden;
   text-overflow:clip;
@@ -1747,7 +1730,7 @@ input{
   line-height:1.35;
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:7px;
   min-height:16px;
 }
 
@@ -1755,7 +1738,7 @@ input{
 .youjinMini{
   display:inline-flex;
   align-items:center;
-  gap:8px;
+  gap:7px;
   padding:6px 10px;
   border-radius:999px;
   border:1px solid rgba(255,77,79,.28);
@@ -1801,7 +1784,7 @@ input{
 .hongbaoTitle{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:7px;
   margin:14px 0 8px;
   color: rgba(231,238,252,.55);
   font-size:12px;
@@ -1935,7 +1918,7 @@ input{
 .transferLine.transferTo{ justify-content:flex-start; }
 .transferWho{
   font-weight:900;
-  font-size:16px;
+  font-size:15px;
   color: rgba(231,238,252,.88);
   letter-spacing:.2px;
   overflow:hidden;
@@ -1965,7 +1948,6 @@ input{
 }
 
 
-/* ===== PATCH vC1: Reserve space so long winner names don't overlap trash button ===== */
 .roundTitle{ padding-right:120px !important; }
 @media (max-width:520px){
   .roundTitle{ padding-right:108px !important; }
@@ -1986,9 +1968,9 @@ input{
 .appHeader h1{ margin:8px 0 6px; }
 
 .previewBtn{
-  height:40px !important;
-  min-height:40px !important;
-  line-height:40px !important;
+  height:36px !important;
+  min-height:36px !important;
+  line-height:36px !important;
   border-radius:999px !important;
   padding:0 14px !important;
   font-size:13px !important;
@@ -2515,7 +2497,7 @@ body.mobile-preview .app{
 .roundTitle .rTopRight{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:7px;
   flex:0 0 auto;
 }
 .roundTitle .rTopRight .metaTag{
@@ -2558,7 +2540,7 @@ body.mobile-preview .app{
   .roundTitle .rTop.rTop--header{ margin-bottom: 8px; }
   .roundTitle .rDealer{ font-size:13px; }
   .roundTitle .rMain{ font-size:22px; }
-  .roundTitle .rSummary{ font-size:16px; }
+  .roundTitle .rSummary{ font-size:15px; }
   .roundTitle .rMeta.rChips{ margin-top:12px !important; }
   .rChips .chip{ font-size:13px; padding:6px 11px; }
 }
@@ -2604,7 +2586,6 @@ body.mobile-preview .app{
 
 
 
-/* ===== PATCH v6.2: Winner name sizing (short names big, long names contained) ===== */
 /* vC1 reserved padding-right was for the old "floating trash" layout; v6 uses a grid so remove it */
 .roundTitle{ padding-right:0 !important; }
 
@@ -2944,7 +2925,7 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:8px;
+  gap:7px;
   width:auto !important;
 }
 .swapBtn svg{ opacity:.88; display:block; }
@@ -2992,7 +2973,7 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
   box-shadow: 0 26px 70px rgba(0,0,0,.55);
   padding:18px;
 }
-.nameModalTitle{ font-weight:900; font-size:16px; margin-bottom:12px; }
+.nameModalTitle{ font-weight:900; font-size:15px; margin-bottom:12px; }
 .nameModalInput{
   width:100%;
   border-radius:12px;
@@ -3001,7 +2982,7 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
   border:1px solid rgba(255,255,255,.10);
   box-shadow: var(--shadow-pressed);
   color: rgba(241,244,251,.96);
-  font-size:16px;
+  font-size:15px;
   outline:none;
 }
 .nameModalActions{ display:flex; justify-content:flex-end; gap:10px; margin-top:14px; }
@@ -3070,7 +3051,7 @@ tbody tr:hover{ background: rgba(255,255,255,.025) !important; }
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:8px;
+  gap:7px;
   width: 100%;
   min-width: 0;
   padding: 0 18px;
@@ -3439,7 +3420,7 @@ body.isSeatDragging{
   left:56px; /* spec: left 56, right 57 (0 width ~9) */
   height:19px;
   line-height:19px;
-  font-size:16px;
+  font-size:15px;
   font-weight:900;
   color:var(--text);
   pointer-events:none;
@@ -3648,7 +3629,7 @@ body.isSeatDragging{
 }
 
 .panelTitle{
-  font-size:16px;
+  font-size:15px;
   line-height:1.2;
   font-weight:700;
   letter-spacing:.1px;
@@ -3704,7 +3685,6 @@ body.isSeatDragging{
 .cardUnifiedStack .cardFormFigma .waterField{ grid-column:3 !important; }
 
 
-/* ===== PATCH v11: fix rMain spacing (remove auto margins on winner) ===== */
 .roundTitle .rMain{
   font-size:24px !important;       /* keep main line consistent */
   justify-content:flex-start !important;
@@ -3715,7 +3695,6 @@ body.isSeatDragging{
 
 
 
-/* ===== PATCH v11.1: Round card main line unify sizes (winner + type = 24px) ===== */
 .rWinnerOnly .rMain{
   font-size:24px !important;
   line-height:1.10 !important;
@@ -3743,10 +3722,6 @@ body.isSeatDragging{
 
 
 
-/* ===== PATCH vNeonFrost (Premium): less “hot”, more cinematic depth =====
-   Replace the current orange/red neon blobs with fewer + larger + lower-saturation lights,
-   add a vignette, and soften grain so it feels “premium” instead of “game neon”.
-*/
 :root{
   --bg:#07080c;
   --bgGrad:
@@ -4075,7 +4050,7 @@ input,select,.stepper,.segmented{
 }
 .bankChips{
   display:flex;
-  gap:8px;
+  gap:7px;
   flex-wrap:wrap;
 }
 .bankChip{
@@ -4125,9 +4100,6 @@ input,select,.stepper,.segmented{
   padding:16px 14px 16px !important;
 }
 
-/* ===== PATCH: 本金只保留 100/200/300，並讓三格填滿整個欄 + 金邊顯示 ===== */
-
-/* === PATCH v2: 修正本金數字橫向置中（iOS/Safari 更穩） === */
 .bankChips .bankChip{
   display:flex !important;
   justify-content:center !important;
@@ -4162,28 +4134,7 @@ input,select,.stepper,.segmented{
     0 10px 24px rgba(0,0,0,.22) !important;
 }
 
-.bankPill{
-  flex:0 0 auto;
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:.2px;
-  padding:6px 10px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.06);
-  color: rgba(231,238,252,.88);
-}
-.bankPill.is-empty{
-  opacity:.72;
-}
-.bankBar.is-locked + .bankPill,
-.bankBar.is-locked ~ .bankPill{
-  opacity:.9;
-}
-
-
-/* === PATCH v3: 用 grid 強制把文字置中（避免 flex/kerning 視覺偏移） === */
-.bankChips .bankChip{
+.bankBar.is-locked + .bankChips .bankChip{
   display:grid !important;
   place-items:center !important;
   text-align:center !important;
@@ -4192,7 +4143,6 @@ input,select,.stepper,.segmented{
 }
 
 
-/* === PATCH v4: iOS 視覺置中（面板漸層 + 半透明按鈕會造成「看起來偏左」） === */
 .bankChips .bankChip{
   /* 讓數字寬度更一致，視覺更居中 */
   font-variant-numeric: tabular-nums !important;
@@ -4204,6 +4154,87 @@ input,select,.stepper,.segmented{
   /* 視覺補償：微量往右推（你截圖那種偏移） */
   padding-left: 6px !important;
   padding-right: 0px !important;
+}
+
+
+/* debug 標記：確認你真的載入 v5（之後可刪） */
+.bankChips .bankChip{
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1 !important;
+  letter-spacing: 0 !important;
+}
+
+
+.bankChips .bankChip{
+  display:flex !important;
+  align-items:center !important;   /* 垂直置中 */
+  justify-content:center !important;/* 水平置中 */
+  height:48px !important;
+  padding:0 !important;
+  line-height:1 !important;
+  text-align:center !important;
+}
+
+
+.bankChips{
+  gap:8px !important;
+}
+.bankChips .bankChip{
+  height:36px !important;
+  font-size:16px !important;
+  padding:0 !important;
+}
+
+
+@media (min-width: 680px){
+  .cardPanel[aria-label="本金"] .bankChips{
+    max-width: 520px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+}
+
+
+/* === BANK PATCH (scoped): 本金只保留 100/200/300 + 3格滿版 + 選中金邊，不影響其他區塊 === */
+.cardPanel[aria-label="本金"] .bankChips{
+  width:100%;
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap:7px;
+}
+.cardPanel[aria-label="本金"] .bankChips .bankChip{
+  width:100%;
+  height:32px;
+  display:flex;
+  align-items:center;          /* 垂直置中 */
+  justify-content:center;      /* 水平置中 */
+  padding:0;
+  text-align:center;
+  line-height:1;
+  border-radius:999px;
+
+  /* iOS 視覺更穩 */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing:0;
+  font-size:15px;
+}
+.cardPanel[aria-label="本金"] .bankChip.is-selected{
+  border-color: rgba(245,210,74,.92);
+  background: rgba(245,210,74,.14);
+  color: rgba(255,255,255,.96);
+  box-shadow:
+    0 0 0 2px rgba(245,210,74,.24),
+    0 10px 24px rgba(0,0,0,.22);
+}
+
+/* 桌面/寬螢幕：避免拉成超長三條（仍置中） */
+@media (min-width: 680px){
+  .cardPanel[aria-label="本金"] .bankChips{
+    max-width: 520px;
+    margin-left:auto;
+    margin-right:auto;
+  }
 }
 
 </style>
@@ -4239,8 +4270,7 @@ input,select,.stepper,.segmented{
     <div class="panelSection">
       <div class="panelHeader">
         <div class="panelTitle">本金</div>
-        <div id="bankSelectedPill" class="bankPill is-empty" aria-live="polite">未選</div>
-      </div>
+</div>
       <div id="bankBar" class="bankBar" role="group" aria-label="本金設定">
         <div class="bankRow">
           <div class="bankChips" role="radiogroup" aria-label="本金">
@@ -4823,21 +4853,10 @@ function syncRecordLock(bustedIdx){
 
 function updateBankUI(){
   const bar = document.getElementById("bankBar");
-    const chips = Array.from(document.querySelectorAll(".bankChip"));
+  const chips = Array.from(document.querySelectorAll(".bankChip"));
   const hasRounds = (typeof rounds !== "undefined") && Array.isArray(rounds) && rounds.length > 0;
 
-  
-  const pill = document.getElementById("bankSelectedPill");
-  if (pill){
-    const hasSel = (startStackSelected != null);
-    pill.classList.toggle("is-empty", !hasSel);
-    if (!hasSel){
-      pill.textContent = "未選";
-    } else {
-      pill.textContent = (hasRounds ? "已鎖：" : "已選：") + String(startStackSelected);
-    }
-  }
-// Lock chips after any record exists (avoid mid-game changes)
+  // Lock chips after any record exists (avoid mid-game changes)
   if (bar){
     bar.classList.toggle("is-locked", hasRounds);
   }
@@ -5858,9 +5877,9 @@ function aggregatePairTransfers(list){
       const mul = r.multiplier || 1;
 
       const carry = Math.max(0, (r.dealerStreak || 1) - 1);
-      // 連莊徽章只在「莊家有贏」的那把顯示，避免非莊家贏牌時也出現連莊。
+      // 連莊徽章以「本把莊家的連莊數」為準：不論誰贏都顯示，且計算也以本把倍率為準。
       // 起莊不顯示；只有連莊才顯示：連1、連2…
-      const streakText = (r.winner === r.dealer && carry > 0) ? `連${carry}` : "";
+      const streakText = (carry > 0) ? `連${carry}` : "";
 
       let sub = "";
       if (r.winner === r.dealer){
