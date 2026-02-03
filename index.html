@@ -4237,6 +4237,8 @@ input,select,.stepper,.segmented{
   }
 }
 
+
+.battleYoujinNote{opacity:.8;font-size:12px}
 </style>
 </head>
 
@@ -4922,79 +4924,54 @@ function updateBankUI(){
   }
 
   function renderBattleboard(){
-    const listEl = document.getElementById("battleList");
-    const sumEl  = document.getElementById("battleSummary");
-    if (!listEl || !sumEl) return;
+  const listEl = document.getElementById("battleList");
+  const sumEl  = document.getElementById("battleSummary");
+  if (!listEl || !sumEl) return;
 
-    if (!battleGames.length){
-      listEl.innerHTML = `<div class="muted">尚無戰績。</div>`;
-      sumEl.innerHTML = "";
-      return;
+  // 沒有戰績：維持空狀態
+  if (!battleGames.length){
+    listEl.innerHTML = `<div class="muted">尚無戰績。</div>`;
+    sumEl.innerHTML = "";
+    return;
+  }
+
+  // 不顯示「戰績卡片」清單，只保留清算列（工具模式）
+  listEl.innerHTML = "";
+
+  // 今晚累計（含游金）
+  const night = Array(players.length).fill(0);
+  const nightHb = Array(players.length).fill(0);
+
+  battleGames.forEach(g=>{
+    for (let i=0;i<players.length;i++){
+      night[i] = round2(night[i] + (Number((g.delta||[])[i]) || 0));
+      nightHb[i] = round2(nightHb[i] + (Number((g.hbDelta||[])[i]) || 0));
     }
+  });
 
-    const cum = Array(players.length).fill(0);
-    const cumHb = Array(players.length).fill(0);
+  const nightTotal = night.map((v,i)=> round2(v + (Number(nightHb[i])||0)));
 
-    listEl.innerHTML = battleGames.map((g, idx)=>{
-      for (let i=0;i<cum.length;i++){
-        cum[i] = round2(cum[i] + (Number((g.delta||[])[i]) || 0));
-        cumHb[i] = round2(cumHb[i] + (Number((g.hbDelta||[])[i]) || 0));
-      }
-
-      const losers = (g.losers || []);
-      const winners = (g.winners || []);
-      const loserTxt = losers.length ? losers.map(i=>escapeHtml(players[i])).join("/") : "—";
-      const winnerTxt = winners.length ? winners.map(i=>escapeHtml(players[i])).join("/") : "—";
-
-      const mainLeft = `#${idx+1}  ${loserTxt} → ${winnerTxt}`;
-      const mainAmt  = `+${fmtMoney(Number(g.amount)||0)}`;
-
-      const cumLine = "計：" + cum.map((v,i)=>{
-        const total = round2(v + (Number(cumHb[i])||0));
-        const hb = round2(Number(cumHb[i])||0);
-        const sign = (total > 0.000001) ? "+" : "";
-        const hbNote = (Math.abs(hb) > 0.000001) ? ` (游金 ${(hb>0)?"+":""}${fmtMoney(hb)})` : "";
-        return `${escapeHtml(players[i])} ${sign}${fmtMoney(total)}${hbNote}`;
-      }).join("｜");
-
-      return `
-        <div class="battleEntry">
-          <div class="battleMain">
-            <div class="battleText">${mainLeft}</div>
-            <div class="battleAmt mono">${mainAmt}</div>
-          </div>
-          <div class="battleCum mono">${cumLine}</div>
-        </div>
-      `;
-    }).join("");
-
-    // 今晚累計（含游金）
-    const night = Array(players.length).fill(0);
-    const nightHb = Array(players.length).fill(0);
-
-    battleGames.forEach(g=>{
-      for (let i=0;i<players.length;i++){
-        night[i] = round2(night[i] + (Number((g.delta||[])[i]) || 0));
-        nightHb[i] = round2(nightHb[i] + (Number((g.hbDelta||[])[i]) || 0));
-      }
-    });
-
-    const nightTotal = night.map((v,i)=> round2(v + (Number(nightHb[i])||0)));
-    const settle = settleTransfers(nightTotal);
-    const settleRows = settle.length
-      ? settle.map(t=>`
+  const settle = settleTransfers(nightTotal);
+  const settleRows = settle.length
+    ? settle.map(t=>{
+        const hb = round2(Number(nightHb[t.from])||0); // 付款方的游金淨額備註
+        const hbNote = (Math.abs(hb) > 0.000001)
+          ? ` <span class="battleYoujinNote mono">(游金 ${(hb>0)?"+":""}${fmtMoney(hb)})</span>`
+          : ``;
+        return `
           <div class="battleSettleRow">
-            <span class="battlePay">${escapeHtml(players[t.from])} → ${escapeHtml(players[t.to])}</span>
+            <span class="battlePay">${escapeHtml(players[t.from])} → ${escapeHtml(players[t.to])}${hbNote}</span>
             <span class="battleSettleAmt mono">${fmtMoney(t.amount)}</span>
           </div>
-        `).join("")
-      : `<div class="muted" style="padding:10px 12px;">無需清算</div>`;
+        `;
+      }).join("")
+    : `<div class="muted" style="padding:10px 12px;">無需清算</div>`;
 
-    sumEl.innerHTML = `
-      <div class="battleSectionTitle">今晚清算（含游金）</div>
-      <div class="battleSettleList">${settleRows}</div>
-    `;
-  }
+  // 只留下「誰給誰」清算列（不顯示標題）
+  sumEl.innerHTML = `
+    <div class="battleSettleList">${settleRows}</div>
+  `;
+}
 
   function recordBattleOnClear(){
     try{
